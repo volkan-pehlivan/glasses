@@ -328,8 +328,7 @@
   flex-wrap: wrap;
 }
 
-.camera-options,
-.camera-rotation-inputs {
+.camera-options {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -339,8 +338,7 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.grid-toggle,
-.manual-rotation-toggle {
+.grid-toggle {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -349,88 +347,15 @@
   cursor: pointer;
 }
 
-.grid-toggle input[type="checkbox"],
-.manual-rotation-toggle input[type="checkbox"] {
+.grid-toggle input[type="checkbox"] {
   width: 18px;
   height: 18px;
   cursor: pointer;
   accent-color: #667eea;
 }
 
-.grid-toggle span,
-.manual-rotation-toggle span {
+.grid-toggle span {
   user-select: none;
-}
-
-.rotation-inputs {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.rotation-input-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.rotation-input-group label {
-  min-width: 25px;
-  color: white;
-  font-weight: 600;
-  font-size: 0.9em;
-}
-
-.rotation-input-group input[type="number"] {
-  flex: 1;
-  padding: 8px 12px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  font-size: 0.9em;
-  outline: none;
-  transition: all 0.3s ease;
-}
-
-.rotation-input-group input[type="number"]:focus {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
-}
-
-.rotation-input-group input[type="number"]::-webkit-inner-spin-button,
-.rotation-input-group input[type="number"]::-webkit-outer-spin-button {
-  opacity: 1;
-  cursor: pointer;
-}
-
-.rotation-input-group span {
-  color: white;
-  font-size: 0.9em;
-  min-width: 20px;
-}
-
-.reset-rotation-btn {
-  padding: 8px 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  font-size: 0.85em;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  align-self: flex-start;
-  margin-top: 5px;
-}
-
-.reset-rotation-btn:hover {
-  background: rgba(255, 167, 38, 0.2);
-  border-color: rgba(255, 167, 38, 0.5);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(255, 167, 38, 0.3);
 }
 
 /* FOV / Focal Length kontrolü */
@@ -612,6 +537,232 @@
 
 .morph-targets-list::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 167, 38, 0.7);
+}
+
+/* Morph Target Selector */
+.morph-target-selector {
+  margin-bottom: 15px;
+}
+
+.morph-target-selector label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.morph-target-selector select {
+  padding: 10px 15px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 0.95em;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.morph-target-selector select:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.morph-target-selector select:focus {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+.morph-target-selector select option {
+  background: #2c3e50;
+  color: white;
+  padding: 10px;
+}
+
+/* Tek Slider için Morph Target */
+.morph-target-slider {
+  margin-bottom: 15px;
+}
+
+.morph-target-slider label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.morph-target-slider input[type="range"] {
+  flex: 1;
+  min-width: 150px;
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  outline: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+.morph-target-slider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ffa726;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s ease;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.morph-target-slider input[type="range"]::-webkit-slider-thumb:hover {
+  background: #ff9800;
+  transform: scale(1.15);
+  box-shadow: 0 3px 8px rgba(255, 167, 38, 0.6);
+}
+
+.morph-target-slider input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ffa726;
+  cursor: pointer;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.morph-target-slider .morph-value {
+  min-width: 50px;
+  font-weight: bold;
+  color: #ffa726;
+  font-size: 1em;
+  text-align: right;
+  background: rgba(255, 167, 38, 0.15);
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-family: 'Courier New', monospace;
+}
+
+/* Morph Targets Summary */
+.morph-targets-summary {
+  margin-top: 15px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.summary-header {
+  margin-bottom: 10px;
+  color: white;
+  font-size: 0.9em;
+}
+
+.morph-targets-mini-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.morph-targets-mini-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.morph-targets-mini-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 2px;
+}
+
+.morph-targets-mini-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 167, 38, 0.5);
+  border-radius: 2px;
+}
+
+.morph-mini-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.85em;
+}
+
+.morph-mini-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 167, 38, 0.3);
+}
+
+.morph-mini-item.active {
+  background: rgba(255, 167, 38, 0.2);
+  border-color: rgba(255, 167, 38, 0.5);
+  box-shadow: 0 0 0 2px rgba(255, 167, 38, 0.2);
+}
+
+.morph-mini-label {
+  color: #ecf0f1;
+  font-weight: 500;
+}
+
+.morph-mini-value {
+  color: #ffa726;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+  background: rgba(255, 167, 38, 0.15);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+/* Morph Target Input */
+.morph-target-input {
+  margin-bottom: 15px;
+}
+
+.morph-target-input label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.morph-target-input input[type="number"] {
+  padding: 10px 15px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 1em;
+  outline: none;
+  transition: all 0.3s ease;
+  font-family: 'Courier New', monospace;
+}
+
+.morph-target-input input[type="number"]:focus {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+.morph-target-input input[type="number"]::-webkit-inner-spin-button,
+.morph-target-input input[type="number"]::-webkit-outer-spin-button {
+  opacity: 1;
+  cursor: pointer;
+}
+
+/* Slider Labels */
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 5px;
+  font-size: 0.85em;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 0 5px;
 }
 
 .info-item {

@@ -1,16 +1,19 @@
 import React, { Suspense, useEffect, useState, useRef, useMemo } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { OrbitControls, Grid, useGLTF } from '@react-three/drei'
+import { OrbitControls, Grid, useGLTF, Environment, useEnvironment } from '@react-three/drei'
 import * as THREE from 'three'
 import './GLBLensViewer.css'
 
-function Model({ url, scale: externalScale = 1, animations: modelAnimations = [], currentAnimation = null, morphTargetValues = {}, cameraView = 'side', controlMode = 'rotate', cameraRef, controlsRef, onAnimationsDetected }) {
+function Model({ url, scale: externalScale = 1, animations: modelAnimations = [], currentAnimation = null, morphTargetValues = {}, selectedMorphTarget = null, morphTarget2Value = -2, cameraView = 'side', controlMode = 'rotate', cameraRef, controlsRef, onAnimationsDetected }) {
   const { scene, animations: detectedAnimations } = useGLTF(url)
   const groupRef = useRef(null)
   const baseScaleRef = useRef(1)
   const mixerRef = useRef(null)
   const actionsRef = useRef({})
   const morphTargetsRef = useRef([])
+  
+  // Environment map'i al
+  const envMap = useEnvironment({ preset: 'city' })
   
   // Animasyonları parent'a bildir
   useEffect(() => {
@@ -38,7 +41,7 @@ function Model({ url, scale: externalScale = 1, animations: modelAnimations = []
   }, [detectedAnimations, onAnimationsDetected])
   
   // Material helper fonksiyonu - Cam material
-  const applyGlassMaterial = (object) => {
+  const applyGlassMaterial = (object, envMapTexture) => {
     object.traverse((child) => {
       if (child.isMesh && child.material) {
         // Geometry normal'lerini düzelt ve smooth shading için hesapla
@@ -80,26 +83,33 @@ function Model({ url, scale: externalScale = 1, animations: modelAnimations = []
           }
         }
         
-        // Cam material - modeli bozmadan, dengeli parametrelerle
+        // Gerçekçi cam material - linkteki örneğe göre
         const glassMaterial = new THREE.MeshPhysicalMaterial({
           color: 0xffffff, // Beyaz
           transparent: true,
-          opacity: 0.4, // Orta şeffaflık (modeli bozmadan görünür kalır)
-          roughness: 0.1, // Çok düşük pürüzlülük (pürüzsüz cam)
+          opacity: 1.0, // Transmission kullanıldığı için opacity 1
+          roughness: 0.0, // Çok düşük pürüzlülük (parlak cam)
           metalness: 0.0, // Metal değil
           side: THREE.DoubleSide, // İki taraflı
           flatShading: false, // Smooth shading
           
-          // Cam özellikleri - dengeli değerler (modeli bozmadan)
-          transmission: 0.7, // Orta ışık geçirgenliği (çok yüksek olmasın)
-          thickness: 0.3, // Cam kalınlığı
-          ior: 1.5, // Index of refraction (gerçek cam)
-          clearcoat: 0.8, // Şeffaf kaplama (biraz düşük)
-          clearcoatRoughness: 0.1, // Biraz pürüzlü clearcoat (daha doğal)
+          // Gerçekçi cam özellikleri
+          transmission: 1.0, // Maksimum ışık geçirgenliği
+          thickness: 3.0, // Cam kalınlığı
+          ior: 1.5, // Index of refraction (gerçek cam için standart)
+          clearcoat: 1.0, // Yüksek şeffaf kaplama
+          clearcoatRoughness: 0.0, // Pürüzsüz clearcoat
+          envMap: envMapTexture, // Environment map'i manuel olarak ekle
+          envMapIntensity: 1.0, // Environment map yoğunluğu (daha dengeli)
           
           // Rendering kalitesi
           precision: 'highp'
         })
+        
+        // Environment map yoksa bile material'i güncelle
+        if (envMapTexture) {
+          glassMaterial.needsUpdate = true
+        }
         
         child.material = glassMaterial
         child.castShadow = false
@@ -112,7 +122,7 @@ function Model({ url, scale: externalScale = 1, animations: modelAnimations = []
   const frontModel = useMemo(() => {
     if (!scene) return null
     const model = scene.clone()
-    applyGlassMaterial(model)
+    applyGlassMaterial(model, envMap)
     
     // Morph targets'ları tespit et
     const morphTargets = []
@@ -216,7 +226,7 @@ function Model({ url, scale: externalScale = 1, animations: modelAnimations = []
     }
     
     return model
-  }, [scene, onAnimationsDetected])
+  }, [scene, onAnimationsDetected, envMap])
   
   // Morph target değerlerini uygula
   useEffect(() => {
@@ -242,15 +252,25 @@ function Model({ url, scale: externalScale = 1, animations: modelAnimations = []
             child.morphTargetInfluences = new Array(morphCount).fill(0)
           }
           
-          // Her morph target için değeri uygula
-          meshMorphTargets.forEach((morphTarget) => {
-            const { targetIndex, targetName } = morphTarget
-            const value = morphTargetValues[targetName] !== undefined ? morphTargetValues[targetName] : 0
-            
-            if (targetIndex >= 0 && targetIndex < child.morphTargetInfluences.length) {
-              child.morphTargetInfluences[targetIndex] = value
-            }
-          })
+          // Sadece morph target 2'ye değer uygula, diğerlerine dokunma
+          if (selectedMorphTarget) {
+            meshMorphTargets.forEach((morphTarget) => {
+              const { targetIndex, targetName } = morphTarget
+              
+              // Sadece seçili morph target 2'ye değer uygula
+              if (selectedMorphTarget === targetName) {
+                // -2 ile -8 arası değeri 0-1 arasına normalize et
+                // -2 → 0, -8 → 1
+                const normalized = (-morphTarget2Value - 2) / 6
+                const value = Math.max(0, Math.min(1, normalized))
+                
+                if (targetIndex >= 0 && targetIndex < child.morphTargetInfluences.length) {
+                  child.morphTargetInfluences[targetIndex] = value
+                }
+              }
+              // Diğer morph target'lara dokunma (zaten 0 olarak başlatıldı)
+            })
+          }
           
           // Morph target uygulandıktan sonra normal'leri yeniden hesapla
           // (Vertex pozisyonları değiştiği için normal'ler de değişmeli)
@@ -263,14 +283,25 @@ function Model({ url, scale: externalScale = 1, animations: modelAnimations = []
             child.morphTargetInfluences = new Array(geometry.morphTargets.length).fill(0)
           }
           
-          meshMorphTargets.forEach((morphTarget) => {
-            const { targetIndex, targetName } = morphTarget
-            const value = morphTargetValues[targetName] !== undefined ? morphTargetValues[targetName] : 0
-            
-            if (targetIndex >= 0 && targetIndex < child.morphTargetInfluences.length) {
-              child.morphTargetInfluences[targetIndex] = value
-            }
-          })
+          // Sadece morph target 2'ye değer uygula, diğerlerine dokunma
+          if (selectedMorphTarget) {
+            meshMorphTargets.forEach((morphTarget) => {
+              const { targetIndex, targetName } = morphTarget
+              
+              // Sadece seçili morph target 2'ye değer uygula
+              if (selectedMorphTarget === targetName) {
+                // -2 ile -8 arası değeri 0-1 arasına normalize et
+                // -2 → 0, -8 → 1
+                const normalized = (-morphTarget2Value - 2) / 6
+                const value = Math.max(0, Math.min(1, normalized))
+                
+                if (targetIndex >= 0 && targetIndex < child.morphTargetInfluences.length) {
+                  child.morphTargetInfluences[targetIndex] = value
+                }
+              }
+              // Diğer morph target'lara dokunma (zaten 0 olarak başlatıldı)
+            })
+          }
           
           // Morph target uygulandıktan sonra normal'leri yeniden hesapla
           geometry.computeVertexNormals()
@@ -286,7 +317,7 @@ function Model({ url, scale: externalScale = 1, animations: modelAnimations = []
         }
       }
     })
-  }, [frontModel, morphTargetValues])
+  }, [frontModel, morphTargetValues, selectedMorphTarget, morphTarget2Value])
   
   // Modeli merkeze hizala ve otomatik ölçeklendir
   useEffect(() => {
@@ -579,43 +610,23 @@ function TopViewCamera({ frontModel, externalScale, cameraView, controlsRef }) {
 }
 
 // Kamera rotation bilgisini takip eden component
-function CameraRotationTracker({ onRotationChange, manualRotation, useManualRotation, controlsRef }) {
+function CameraRotationTracker({ onRotationChange, controlsRef }) {
   const { camera } = useThree()
   
-  // Manuel rotation uygula - her frame'de uygula (OrbitControls'tan sonra)
+  // Normal rotation tracking - mevcut rotation'ı dereceye çevir
   useFrame(() => {
     if (!camera) return
     
-    if (useManualRotation && manualRotation) {
-      // Dereceyi radyan'a çevir ve rotation'ı direkt uygula
-      // Her frame'de uygula ki başka bir şey override edemesin
-      const radX = (manualRotation.x * Math.PI) / 180
-      const radY = (manualRotation.y * Math.PI) / 180
-      const radZ = (manualRotation.z * Math.PI) / 180
+    if (onRotationChange) {
+      const rotationX = (camera.rotation.x * 180) / Math.PI
+      const rotationY = (camera.rotation.y * 180) / Math.PI
+      const rotationZ = (camera.rotation.z * 180) / Math.PI
       
-      camera.rotation.set(radX, radY, radZ)
-      
-      // Rotation değiştiğinde parent'a bildir (görüntüleme için)
-      if (onRotationChange) {
-        onRotationChange({
-          x: manualRotation.x,
-          y: manualRotation.y,
-          z: manualRotation.z
-        })
-      }
-    } else {
-      // Normal rotation tracking - mevcut rotation'ı dereceye çevir
-      if (onRotationChange) {
-        const rotationX = (camera.rotation.x * 180) / Math.PI
-        const rotationY = (camera.rotation.y * 180) / Math.PI
-        const rotationZ = (camera.rotation.z * 180) / Math.PI
-        
-        onRotationChange({
-          x: rotationX,
-          y: rotationY,
-          z: rotationZ
-        })
-      }
+      onRotationChange({
+        x: rotationX,
+        y: rotationY,
+        z: rotationZ
+      })
     }
   })
   
@@ -628,12 +639,12 @@ function GLBLensViewer() {
   const [availableMorphTargets, setAvailableMorphTargets] = useState([])
   const [currentAnimation, setCurrentAnimation] = useState(null)
   const [morphTargetValues, setMorphTargetValues] = useState({})
+  const [selectedMorphTarget, setSelectedMorphTarget] = useState(null) // Seçili morph target
+  const [morphTarget2Value, setMorphTarget2Value] = useState(-2) // Morph target 2 değeri (-2 ile -8 arası)
   const [cameraView, setCameraView] = useState('side') // 'side', 'top', 'front', 'center'
   const [controlMode, setControlMode] = useState('rotate') // 'rotate', 'pan', 'both'
   const [cameraRotation, setCameraRotation] = useState({ x: 0, y: 0, z: 0 }) // Kamera rotation bilgisi
   const [showGrid, setShowGrid] = useState(true) // Grid göster/gizle
-  const [manualRotation, setManualRotation] = useState({ x: 0, y: 0, z: 0 }) // Manuel kamera açısı
-  const [useManualRotation, setUseManualRotation] = useState(false) // Manuel açı kullan
   const cameraRef = useRef(null)
   const controlsRef = useRef(null)
   const modelUrl = '/Lens/L_Glass_3_4.glb'
@@ -656,6 +667,18 @@ function GLBLensViewer() {
           initialValues[morph.targetName] = 0
         })
         setMorphTargetValues(initialValues)
+        
+        // Morph target 2'yi bul ve başlangıç değerini ayarla
+        const morphTarget2 = data.find((morph, index) => 
+          morph.targetName.includes('2') || 
+          morph.targetName.toLowerCase().includes('morphtarget_2') ||
+          index === 1
+        )
+        
+        if (morphTarget2) {
+          // Başlangıç değeri -2 (slider 0)
+          setMorphTarget2Value(-2)
+        }
         
         console.log('')
         console.log('═══════════════════════════════════════')
@@ -713,21 +736,78 @@ function GLBLensViewer() {
     }
   }, [])
   
+  // Morph target 2'yi bul ve seç
+  useEffect(() => {
+    if (availableMorphTargets.length > 0 && !selectedMorphTarget) {
+      // Morph target 2'yi bul (isimde "2" geçen veya index 2 olan)
+      const morphTarget2 = availableMorphTargets.find((morph, index) => 
+        morph.targetName.includes('2') || 
+        morph.targetName.toLowerCase().includes('morphtarget_2') ||
+        index === 1 // İkinci morph target (0-indexed)
+      )
+      
+      if (morphTarget2) {
+        setSelectedMorphTarget(morphTarget2.targetName)
+        // Morph target 2 için başlangıç değerini -2 olarak ayarla (slider 0)
+        setMorphTargetValues(prev => ({
+          ...prev,
+          [morphTarget2.targetName]: 0 // Slider değeri 0 (morph değeri -2'ye denk gelir)
+        }))
+        setMorphTarget2Value(-2)
+      }
+    }
+  }, [availableMorphTargets, selectedMorphTarget])
+  
+  // Morph değerini slider değerine çevir (0-1 arası)
+  // Slider 0 → Morph -2, Slider 1 → Morph -8
+  const morphValueToSlider = (morphValue) => {
+    // morphValue = -2 - 6*sliderValue
+    // sliderValue = -(morphValue + 2) / 6
+    return Math.max(0, Math.min(1, -(morphValue + 2) / 6))
+  }
+  
+  // Slider değerini morph değerine çevir (-2 ile -8 arası)
+  const sliderToMorphValue = (sliderValue) => {
+    // morphValue = -2 - 6*sliderValue
+    return -2 - (sliderValue * 6)
+  }
+  
+  // Morph target 2 için mevcut morph değerini al
+  const getCurrentMorphValue = () => {
+    if (!selectedMorphTarget) return -2
+    const sliderValue = morphTargetValues[selectedMorphTarget] || 0
+    return sliderToMorphValue(sliderValue)
+  }
+  
+  // Morph target 2 için değeri güncelle (input'tan)
+  const updateMorphValue = (morphValue) => {
+    if (!selectedMorphTarget) return
+    // Değeri -2 ile -8 arasında sınırla
+    const clampedValue = Math.max(-8, Math.min(-2, morphValue))
+    // Morph değerini slider değerine çevir
+    const sliderValue = morphValueToSlider(clampedValue)
+    setMorphTargetValues(prev => ({
+      ...prev,
+      [selectedMorphTarget]: sliderValue
+    }))
+    setMorphTarget2Value(clampedValue)
+  }
+  
+  // Slider değiştiğinde morph değeri güncelle
+  const handleSliderChange = (sliderValue) => {
+    if (!selectedMorphTarget) return
+    const morphValue = sliderToMorphValue(parseFloat(sliderValue))
+    setMorphTargetValues(prev => ({
+      ...prev,
+      [selectedMorphTarget]: parseFloat(sliderValue)
+    }))
+    setMorphTarget2Value(morphValue)
+  }
+  
   // Kamera açısını değiştir
   const handleCameraView = (view) => {
     setCameraView(view)
   }
-  
-  // Manuel rotation aktif edildiğinde mevcut açıları yükle
-  useEffect(() => {
-    if (useManualRotation) {
-      setManualRotation({
-        x: cameraRotation.x,
-        y: cameraRotation.y,
-        z: cameraRotation.z
-      })
-    }
-  }, [useManualRotation]) // Sadece useManualRotation değiştiğinde çalış
   
   return (
     <div className="glb-lens-viewer">
@@ -739,37 +819,25 @@ function GLBLensViewer() {
             <div className="camera-view-buttons">
               <button 
                 className={`camera-btn ${cameraView === 'front' ? 'active' : ''}`}
-                onClick={() => {
-                  setUseManualRotation(false)
-                  handleCameraView('front')
-                }}
+                onClick={() => handleCameraView('front')}
               >
                 📐 Front
               </button>
               <button 
                 className={`camera-btn ${cameraView === 'side' ? 'active' : ''}`}
-                onClick={() => {
-                  setUseManualRotation(false)
-                  handleCameraView('side')
-                }}
+                onClick={() => handleCameraView('side')}
               >
                 👁️ Side
               </button>
               <button 
                 className={`camera-btn ${cameraView === 'top' ? 'active' : ''}`}
-                onClick={() => {
-                  setUseManualRotation(false)
-                  handleCameraView('top')
-                }}
+                onClick={() => handleCameraView('top')}
               >
                 🔝 Top
               </button>
               <button 
                 className={`camera-btn ${cameraView === 'center' ? 'active' : ''}`}
-                onClick={() => {
-                  setUseManualRotation(false)
-                  handleCameraView('center')
-                }}
+                onClick={() => handleCameraView('center')}
               >
                 🎯 Ortala
               </button>
@@ -785,70 +853,6 @@ function GLBLensViewer() {
                 />
                 <span>📊 Grid Göster</span>
               </label>
-            </div>
-            
-            {/* Manuel kamera açısı girişi */}
-            <div className="camera-rotation-inputs">
-              <label className="manual-rotation-toggle">
-                <input
-                  type="checkbox"
-                  checked={useManualRotation}
-                  onChange={(e) => setUseManualRotation(e.target.checked)}
-                />
-                <span>📐 Manuel Açı Girişi</span>
-              </label>
-              
-              {useManualRotation && (
-                <div className="rotation-inputs">
-                  <div className="rotation-input-group">
-                    <label>X:</label>
-                    <input
-                      type="number"
-                      value={manualRotation.x}
-                      onChange={(e) => {
-                        const value = parseFloat(e.target.value) || 0
-                        setManualRotation(prev => ({ ...prev, x: value }))
-                      }}
-                      step="1"
-                    />
-                    <span>°</span>
-                  </div>
-                  <div className="rotation-input-group">
-                    <label>Y:</label>
-                    <input
-                      type="number"
-                      value={manualRotation.y}
-                      onChange={(e) => {
-                        const value = parseFloat(e.target.value) || 0
-                        setManualRotation(prev => ({ ...prev, y: value }))
-                      }}
-                      step="1"
-                    />
-                    <span>°</span>
-                  </div>
-                  <div className="rotation-input-group">
-                    <label>Z:</label>
-                    <input
-                      type="number"
-                      value={manualRotation.z}
-                      onChange={(e) => {
-                        const value = parseFloat(e.target.value) || 0
-                        setManualRotation(prev => ({ ...prev, z: value }))
-                      }}
-                      step="1"
-                    />
-                    <span>°</span>
-                  </div>
-                  <button
-                    className="reset-rotation-btn"
-                    onClick={() => {
-                      setManualRotation({ x: 0, y: 0, z: 0 })
-                    }}
-                  >
-                    🔄 Sıfırla
-                  </button>
-                </div>
-              )}
             </div>
           </div>
           
@@ -898,7 +902,8 @@ function GLBLensViewer() {
                 powerPreference: "high-performance",
                 precision: "highp",
                 stencil: false,
-                depth: true
+                depth: true,
+                useLegacyLights: false // Physically correct lights için
               }}
               dpr={[1, 2]}
             >
@@ -916,21 +921,24 @@ function GLBLensViewer() {
                   />
                 )}
                 
-                {/* Işıklandırma - cam için daha iyi */}
-                <ambientLight intensity={1.2} />
+                {/* Işıklandırma - gerçekçi cam için */}
+                <ambientLight intensity={0.5} />
                 <directionalLight 
                   position={[10, 10, 10]} 
-                  intensity={1.5} 
+                  intensity={2.0} 
                   castShadow={false}
                 />
                 <directionalLight 
                   position={[-10, 10, -10]} 
-                  intensity={0.8} 
+                  intensity={1.0} 
                 />
                 <directionalLight 
                   position={[0, -10, 0]} 
-                  intensity={0.5} 
+                  intensity={0.3} 
                 />
+                
+                {/* Environment Map - gerçekçi cam yansımaları için */}
+                <Environment preset="city" />
                 
                 {/* Grid - koyu gri arka plan üzerinde */}
                 {showGrid && (
@@ -952,6 +960,8 @@ function GLBLensViewer() {
                   scale={scale} 
                   currentAnimation={currentAnimation}
                   morphTargetValues={morphTargetValues}
+                  selectedMorphTarget={selectedMorphTarget}
+                  morphTarget2Value={morphTarget2Value}
                   cameraView={cameraView}
                   controlMode={controlMode}
                   onAnimationsDetected={handleModelLoad}
@@ -961,53 +971,36 @@ function GLBLensViewer() {
                 {/* Kamera rotation takibi */}
                 <CameraRotationTracker 
                   onRotationChange={setCameraRotation}
-                  manualRotation={manualRotation}
-                  useManualRotation={useManualRotation}
                   controlsRef={controlsRef}
                 />
                 
-                {/* Kamera kontrolleri - dinamik mod */}
-                {!useManualRotation && (
-                  <OrbitControls
-                    ref={controlsRef}
-                    enablePan={controlMode === 'pan' || controlMode === 'both'}
-                    enableZoom={true}
-                    enableRotate={controlMode === 'rotate' || controlMode === 'both'}
-                    minDistance={15}
-                    maxDistance={150}
-                    autoRotate={false}
-                    target={[0, 3, 0]}
-                    panSpeed={1.5}
-                    zoomSpeed={1.0}
-                    rotateSpeed={1.0}
-                    mouseButtons={{
-                      LEFT: controlMode === 'pan' ? THREE.MOUSE.PAN : 
-                            controlMode === 'rotate' ? THREE.MOUSE.ROTATE : 
-                            THREE.MOUSE.ROTATE,
-                      MIDDLE: THREE.MOUSE.DOLLY,
-                      RIGHT: controlMode === 'pan' ? THREE.MOUSE.PAN : 
-                             controlMode === 'rotate' ? THREE.MOUSE.ROTATE : 
-                             THREE.MOUSE.PAN
-                    }}
-                    touches={{
-                      ONE: THREE.TOUCH.ROTATE,
-                      TWO: THREE.TOUCH.DOLLY_PAN
-                    }}
-                  />
-                )}
-                {/* Manuel mod aktifken sadece zoom için minimal kontrol */}
-                {useManualRotation && (
-                  <OrbitControls
-                    ref={controlsRef}
-                    enablePan={false}
-                    enableZoom={true}
-                    enableRotate={false}
-                    minDistance={15}
-                    maxDistance={150}
-                    autoRotate={false}
-                    target={[0, 3, 0]}
-                  />
-                )}
+                {/* Kamera kontrolleri */}
+                <OrbitControls
+                  ref={controlsRef}
+                  enablePan={controlMode === 'pan' || controlMode === 'both'}
+                  enableZoom={true}
+                  enableRotate={controlMode === 'rotate' || controlMode === 'both'}
+                  minDistance={15}
+                  maxDistance={150}
+                  autoRotate={false}
+                  target={[0, 3, 0]}
+                  panSpeed={1.5}
+                  zoomSpeed={1.0}
+                  rotateSpeed={1.0}
+                  mouseButtons={{
+                    LEFT: controlMode === 'pan' ? THREE.MOUSE.PAN : 
+                          controlMode === 'rotate' ? THREE.MOUSE.ROTATE : 
+                          THREE.MOUSE.ROTATE,
+                    MIDDLE: THREE.MOUSE.DOLLY,
+                    RIGHT: controlMode === 'pan' ? THREE.MOUSE.PAN : 
+                           controlMode === 'rotate' ? THREE.MOUSE.ROTATE : 
+                           THREE.MOUSE.PAN
+                  }}
+                  touches={{
+                    ONE: THREE.TOUCH.ROTATE,
+                    TWO: THREE.TOUCH.DOLLY_PAN
+                  }}
+                />
               </Suspense>
             </Canvas>
           </div>
@@ -1055,35 +1048,51 @@ function GLBLensViewer() {
             )}
           </div>
           
-          {/* Morph Targets - Sağ panelde */}
-          {availableMorphTargets.length > 0 && (
+          {/* SPH Kontrolü */}
+          {selectedMorphTarget && (
             <div className="control-section morph-targets-section">
               <div className="section-header">
-                <strong>🎭 Morph Targets</strong>
-                <span className="morph-count">{availableMorphTargets.length}</span>
+                <strong>🔍 SPH (Göz Bozukluk Derecesi)</strong>
               </div>
-              <div className="morph-targets-list">
-                {availableMorphTargets.map((morph) => (
-                  <div key={morph.targetName} className="morph-target-control">
-                    <label>
-                      <span className="morph-label">{morph.targetName}</span>
-                      <input
-                        type="range"
-                        min="0"
-                        max="1"
-                        step="0.01"
-                        value={morphTargetValues[morph.targetName] || 0}
-                        onChange={(e) => {
-                          setMorphTargetValues(prev => ({
-                            ...prev,
-                            [morph.targetName]: parseFloat(e.target.value)
-                          }))
-                        }}
-                      />
-                      <span className="morph-value">{(morphTargetValues[morph.targetName] || 0).toFixed(2)}</span>
-                    </label>
-                  </div>
-                ))}
+              
+              {/* Input ile değer girişi */}
+              <div className="control-item morph-target-input">
+                <label>
+                  <strong>SPH (-2 ile -8 arası):</strong>
+                  <input
+                    type="number"
+                    min="-8"
+                    max="-2"
+                    step="0.1"
+                    value={morphTarget2Value.toFixed(1)}
+                    onChange={(e) => {
+                      const value = parseFloat(e.target.value)
+                      if (!isNaN(value)) {
+                        updateMorphValue(value)
+                      }
+                    }}
+                  />
+                </label>
+              </div>
+              
+              {/* Slider */}
+              <div className="control-item morph-target-slider">
+                <label>
+                  <strong>SPH Slider:</strong>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={morphTargetValues[selectedMorphTarget] || 0}
+                    onChange={(e) => handleSliderChange(e.target.value)}
+                  />
+                  <span className="morph-value">{getCurrentMorphValue().toFixed(2)}</span>
+                </label>
+                <div className="slider-labels">
+                  <span>-2</span>
+                  <span>-8</span>
+                </div>
               </div>
             </div>
           )}
