@@ -4,6 +4,334 @@ import { OrbitControls, Grid, useGLTF, Environment, useEnvironment } from '@reac
 import * as THREE from 'three'
 import './GLBLensViewer.css'
 
+// Lens Geometry Component
+function AccurateLensGeometry({ centerThickness, edgeThickness, diameter, prescription, index }) {
+  const geometry = useMemo(() => {
+    const width = diameter * 1.4
+    const height = diameter * 0.9
+    
+    const minDim = Math.min(width, height)
+    const cornerRadii = {
+      topLeft: minDim * 0.05,
+      topRight: minDim * 0.05,
+      bottomRight: minDim * 0.45,
+      bottomLeft: minDim * 0.45
+    }
+    
+    const radialRings = 50
+    const boundaryPoints = 120
+    
+    const positions = []
+    const indices = []
+    
+    const SE = prescription
+    
+    let baseCurve
+    if (prescription < 0) {
+      baseCurve = SE / 2 + 6.00
+    } else if (prescription > 0) {
+      baseCurve = SE + 6.00
+    } else {
+      baseCurve = 6.00
+    }
+    
+    const F1 = baseCurve
+    const F2 = prescription - F1
+    const r1 = Math.abs((1000 * (index - 1)) / F1)
+    const r2 = Math.abs((1000 * (index - 1)) / F2)
+    
+    const calculateSagitta = (r, R) => {
+      if (R === 0 || r > R) return 0
+      return R - Math.sqrt(R * R - r * r)
+    }
+    
+    const getRoundedRectPoint = (t) => {
+      const halfW = width / 2
+      const halfH = height / 2
+      
+      const topLength = width - cornerRadii.topLeft - cornerRadii.topRight
+      const rightLength = height - cornerRadii.topRight - cornerRadii.bottomRight
+      const bottomLength = width - cornerRadii.bottomRight - cornerRadii.bottomLeft
+      const leftLength = height - cornerRadii.bottomLeft - cornerRadii.topLeft
+      
+      const topRightCornerLength = (Math.PI / 2) * cornerRadii.topRight
+      const bottomRightCornerLength = (Math.PI / 2) * cornerRadii.bottomRight
+      const bottomLeftCornerLength = (Math.PI / 2) * cornerRadii.bottomLeft
+      const topLeftCornerLength = (Math.PI / 2) * cornerRadii.topLeft
+      
+      const totalPerimeter = topLength + topRightCornerLength + rightLength + 
+                             bottomRightCornerLength + bottomLength + 
+                             bottomLeftCornerLength + leftLength + topLeftCornerLength
+      
+      const distance = t * totalPerimeter
+      let accumulated = 0
+      
+      if (distance < accumulated + topLength) {
+        const local = distance - accumulated
+        return { x: -halfW + cornerRadii.topLeft + local, z: -halfH }
+      }
+      accumulated += topLength
+      
+      if (distance < accumulated + topRightCornerLength) {
+        const local = (distance - accumulated) / topRightCornerLength
+        const angle = -Math.PI / 2 + local * (Math.PI / 2)
+        return { 
+          x: halfW - cornerRadii.topRight + cornerRadii.topRight * Math.cos(angle), 
+          z: -halfH + cornerRadii.topRight + cornerRadii.topRight * Math.sin(angle) 
+        }
+      }
+      accumulated += topRightCornerLength
+      
+      if (distance < accumulated + rightLength) {
+        const local = distance - accumulated
+        return { x: halfW, z: -halfH + cornerRadii.topRight + local }
+      }
+      accumulated += rightLength
+      
+      if (distance < accumulated + bottomRightCornerLength) {
+        const local = (distance - accumulated) / bottomRightCornerLength
+        const angle = 0 + local * (Math.PI / 2)
+        return { 
+          x: halfW - cornerRadii.bottomRight + cornerRadii.bottomRight * Math.cos(angle), 
+          z: halfH - cornerRadii.bottomRight + cornerRadii.bottomRight * Math.sin(angle) 
+        }
+      }
+      accumulated += bottomRightCornerLength
+      
+      if (distance < accumulated + bottomLength) {
+        const local = distance - accumulated
+        return { x: halfW - cornerRadii.bottomRight - local, z: halfH }
+      }
+      accumulated += bottomLength
+      
+      if (distance < accumulated + bottomLeftCornerLength) {
+        const local = (distance - accumulated) / bottomLeftCornerLength
+        const angle = Math.PI / 2 + local * (Math.PI / 2)
+        return { 
+          x: -halfW + cornerRadii.bottomLeft + cornerRadii.bottomLeft * Math.cos(angle), 
+          z: halfH - cornerRadii.bottomLeft + cornerRadii.bottomLeft * Math.sin(angle) 
+        }
+      }
+      accumulated += bottomLeftCornerLength
+      
+      if (distance < accumulated + leftLength) {
+        const local = distance - accumulated
+        return { x: -halfW, z: halfH - cornerRadii.bottomLeft - local }
+      }
+      accumulated += leftLength
+      
+      const local = (distance - accumulated) / topLeftCornerLength
+      const angle = Math.PI + local * (Math.PI / 2)
+      return { 
+        x: -halfW + cornerRadii.topLeft + cornerRadii.topLeft * Math.cos(angle), 
+        z: -halfH + cornerRadii.topLeft + cornerRadii.topLeft * Math.sin(angle) 
+      }
+    }
+    
+    const centerR = 0
+    const centerS1 = calculateSagitta(centerR, r1)
+    const centerS2 = calculateSagitta(centerR, r2)
+    positions.push(0, -centerS1, 0)
+    positions.push(0, -centerThickness - centerS2, 0)
+    
+    for (let ring = 1; ring <= radialRings; ring++) {
+      const ringRatio = ring / radialRings
+      
+      for (let i = 0; i < boundaryPoints; i++) {
+        const t = i / boundaryPoints
+        const boundaryPt = getRoundedRectPoint(t)
+        const x = boundaryPt.x * ringRatio
+        const z = boundaryPt.z * ringRatio
+        const r = Math.sqrt(x * x + z * z)
+        const s1 = calculateSagitta(r, r1)
+        const s2 = calculateSagitta(r, r2)
+        const topY = -s1
+        const bottomY = -centerThickness - s2
+        
+        positions.push(x, topY, z)
+        positions.push(x, bottomY, z)
+      }
+    }
+    
+    for (let i = 0; i < boundaryPoints; i++) {
+      const next = (i + 1) % boundaryPoints
+      const current = 1 + i * 2
+      const nextVertex = 1 + next * 2
+      indices.push(0, current, nextVertex)
+      indices.push(1, nextVertex + 1, current + 1)
+    }
+    
+    for (let ring = 0; ring < radialRings - 1; ring++) {
+      const ringStart = 1 + ring * boundaryPoints * 2
+      const nextRingStart = 1 + (ring + 1) * boundaryPoints * 2
+      
+      for (let i = 0; i < boundaryPoints; i++) {
+        const next = (i + 1) % boundaryPoints
+        const c = ringStart + i * 2
+        const n = ringStart + next * 2
+        const cn = nextRingStart + i * 2
+        const nn = nextRingStart + next * 2
+        
+        indices.push(c, cn, n)
+        indices.push(n, cn, nn)
+        indices.push(c + 1, n + 1, cn + 1)
+        indices.push(n + 1, nn + 1, cn + 1)
+      }
+    }
+    
+    const outerRingStart = 1 + (radialRings - 1) * boundaryPoints * 2
+    for (let i = 0; i < boundaryPoints; i++) {
+      const next = (i + 1) % boundaryPoints
+      const c = outerRingStart + i * 2
+      const n = outerRingStart + next * 2
+      indices.push(c, c + 1, n)
+      indices.push(n, c + 1, n + 1)
+    }
+    
+    const geometry = new THREE.BufferGeometry()
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
+    geometry.setIndex(indices)
+    geometry.computeVertexNormals()
+    
+    return geometry
+  }, [centerThickness, edgeThickness, diameter, prescription, index])
+  
+  return (
+    <mesh geometry={geometry} castShadow receiveShadow>
+      <meshPhysicalMaterial
+        color="#4a90e2"
+        transparent={true}
+        opacity={0.85}
+        roughness={0.05}
+        metalness={0.1}
+        transmission={0.9}
+        thickness={0.5}
+        ior={1.5}
+        clearcoat={1.0}
+        clearcoatRoughness={0.1}
+        envMapIntensity={1.5}
+        side={THREE.DoubleSide}
+      />
+    </mesh>
+  )
+}
+
+// Custom Lens Model Component
+function CustomLensModel({ lensParams, controlsRef, cameraView = 'side' }) {
+  const groupRef = useRef(null)
+  const { camera } = useThree()
+  
+  // Simple camera positioning for custom lens
+  useEffect(() => {
+    if (!camera || !controlsRef.current) return
+    
+    const distance = 100
+    let cameraPosition
+    let targetPosition = new THREE.Vector3(0, 0, 0)
+    
+    switch (cameraView) {
+      case 'front':
+        cameraPosition = new THREE.Vector3(0, 0, distance)
+        break
+      case 'side':
+        cameraPosition = new THREE.Vector3(distance, 0, 0)
+        break
+      case 'top':
+        cameraPosition = new THREE.Vector3(0, distance, 0)
+        camera.rotation.set(-Math.PI / 2, 0, Math.PI)
+        break
+      case 'center':
+        cameraPosition = new THREE.Vector3(distance * 0.7, distance * 0.7, distance * 0.7)
+        camera.rotation.set(0, 0, 0)
+        break
+      default:
+        cameraPosition = new THREE.Vector3(distance, 0, 0)
+        camera.rotation.set(0, 0, 0)
+    }
+    
+    camera.position.copy(cameraPosition)
+    controlsRef.current.target.copy(targetPosition)
+    
+    if (cameraView !== 'top') {
+      camera.lookAt(targetPosition)
+    }
+    
+    controlsRef.current.update()
+  }, [cameraView, camera, controlsRef])
+  
+  const calculateThickness = (prescription, index, diameter) => {
+    const D = diameter
+    const P = Math.abs(prescription)
+    const n = index
+    const thicknessAddition = (D * D * P) / (2000 * (n - 1))
+    
+    let centerT, edgeT
+    
+    if (prescription < 0) {
+      centerT = lensParams.edgeThickness || 1.5
+      edgeT = centerT + thicknessAddition
+    } else if (prescription > 0) {
+      centerT = (lensParams.edgeThickness || 1.5) + thicknessAddition
+      edgeT = lensParams.edgeThickness || 1.5
+    } else {
+      centerT = lensParams.edgeThickness || 1.5
+      edgeT = lensParams.edgeThickness || 1.5
+    }
+    
+    return {
+      center: Math.max(lensParams.edgeThickness || 1.5, centerT),
+      edge: Math.max(lensParams.edgeThickness || 1.5, edgeT)
+    }
+  }
+  
+  const showBoth = lensParams.showBoth
+  const rightThickness = showBoth ? calculateThickness(lensParams.rightPrescription, lensParams.rightIndex, lensParams.rightDiameter) : calculateThickness(lensParams.rightPrescription, lensParams.rightIndex, lensParams.rightDiameter)
+  const leftThickness = showBoth ? calculateThickness(lensParams.leftPrescription, lensParams.leftIndex, lensParams.leftDiameter) : rightThickness
+  
+  const rightMaxThickness = Math.max(rightThickness.center, rightThickness.edge)
+  const leftMaxThickness = Math.max(leftThickness.center, leftThickness.edge)
+  const rightYOffset = showBoth ? rightMaxThickness / 2 : 0
+  const leftYOffset = showBoth ? leftMaxThickness / 2 : 0
+  
+  return (
+    <group ref={groupRef}>
+      {showBoth ? (
+        <>
+          <group position={[-lensParams.rightDiameter * 1.1, rightYOffset, 0]} rotation={[Math.PI / 2, 0, 0]}>
+            <AccurateLensGeometry 
+              centerThickness={rightThickness.center}
+              edgeThickness={rightThickness.edge}
+              diameter={lensParams.rightDiameter}
+              prescription={lensParams.rightPrescription}
+              index={lensParams.rightIndex}
+            />
+          </group>
+          
+          <group position={[lensParams.leftDiameter * 1.1, leftYOffset, 0]} rotation={[Math.PI / 2, 0, 0]}>
+            <AccurateLensGeometry 
+              centerThickness={leftThickness.center}
+              edgeThickness={leftThickness.edge}
+              diameter={lensParams.leftDiameter}
+              prescription={lensParams.leftPrescription}
+              index={lensParams.leftIndex}
+            />
+          </group>
+        </>
+      ) : (
+        <group rotation={[Math.PI / 2, 0, 0]}>
+          <AccurateLensGeometry 
+            centerThickness={rightThickness.center}
+            edgeThickness={rightThickness.edge}
+            diameter={lensParams.rightDiameter}
+            prescription={lensParams.rightPrescription}
+            index={lensParams.rightIndex}
+          />
+        </group>
+      )}
+    </group>
+  )
+}
+
 function Model({ url, scale: externalScale = 1, animations: modelAnimations = [], currentAnimation = null, morphTargetValues = {}, selectedMorphTarget = null, morphTarget2Value = -2, cameraView = 'side', controlMode = 'rotate', cameraRef, controlsRef, onAnimationsDetected }) {
   const { scene, animations: detectedAnimations } = useGLTF(url)
   const groupRef = useRef(null)
@@ -633,7 +961,7 @@ function CameraRotationTracker({ onRotationChange, controlsRef }) {
   return null
 }
 
-function GLBLensViewer() {
+function GLBLensViewer({ useCustomGeometry = false, lensParams = null }) {
   const [scale, setScale] = useState(1)
   const [availableAnimations, setAvailableAnimations] = useState([])
   const [availableMorphTargets, setAvailableMorphTargets] = useState([])
@@ -954,19 +1282,27 @@ function GLBLensViewer() {
                 {/* Eksenler */}
                 <axesHelper args={[30]} />
                 
-                {/* GLB Model */}
-                <Model 
-                  url={modelUrl} 
-                  scale={scale} 
-                  currentAnimation={currentAnimation}
-                  morphTargetValues={morphTargetValues}
-                  selectedMorphTarget={selectedMorphTarget}
-                  morphTarget2Value={morphTarget2Value}
-                  cameraView={cameraView}
-                  controlMode={controlMode}
-                  onAnimationsDetected={handleModelLoad}
-                  controlsRef={controlsRef}
-                />
+                {/* GLB Model or Custom Lens */}
+                {useCustomGeometry && lensParams ? (
+                  <CustomLensModel 
+                    lensParams={lensParams}
+                    controlsRef={controlsRef}
+                    cameraView={cameraView}
+                  />
+                ) : (
+                  <Model 
+                    url={modelUrl} 
+                    scale={scale} 
+                    currentAnimation={currentAnimation}
+                    morphTargetValues={morphTargetValues}
+                    selectedMorphTarget={selectedMorphTarget}
+                    morphTarget2Value={morphTarget2Value}
+                    cameraView={cameraView}
+                    controlMode={controlMode}
+                    onAnimationsDetected={handleModelLoad}
+                    controlsRef={controlsRef}
+                  />
+                )}
                 
                 {/* Kamera rotation takibi */}
                 <CameraRotationTracker 

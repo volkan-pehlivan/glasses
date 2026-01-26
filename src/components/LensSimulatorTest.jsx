@@ -5,9 +5,9 @@ import * as THREE from 'three'
 import './LensSimulator.css'
 
 /**
- * PROFESSIONAL LENS SIMULATOR
+ * PROFESSIONAL LENS SIMULATOR - TEST VERSION
  * 
- * This implements the correct optical engineering algorithm:
+ * This version implements the correct optical engineering algorithm:
  * 1. Vogel's Rule for base curve selection
  * 2. Proper power distribution between front and back surfaces
  * 3. Exact sagitta calculations from radius of curvature
@@ -20,8 +20,8 @@ import './LensSimulator.css'
 function AccurateLensGeometry({ centerThickness, edgeThickness, diameter, prescription, index }) {
   const geometry = useMemo(() => {
     // Use diameter as the width/height of rectangular lens
-    const width = diameter * 1.4 // Much wider
-    const height = diameter * 0.7 // Less tall - more rectangular proportions
+    const width = diameter
+    const height = diameter * 0.6 // Make it rectangular (not square)
     const segments = 32 // Resolution along width and height
     
     const positions = []
@@ -53,6 +53,30 @@ function AccurateLensGeometry({ centerThickness, edgeThickness, diameter, prescr
     // Step 4: Convert Powers to Radii
     const r1 = Math.abs((1000 * (index - 1)) / F1) // Front radius
     const r2 = Math.abs((1000 * (index - 1)) / F2) // Back radius (absolute value)
+    
+    // Debug logging (only once per geometry creation)
+    if (typeof window !== 'undefined' && !window._lensDebugLogged) {
+      console.log('=== PROFESSIONAL LENS CALCULATION ===')
+      console.log('Prescription:', prescription, 'D')
+      console.log('Index:', index)
+      console.log('Diameter:', diameter, 'mm')
+      console.log('---')
+      console.log('Step 1 - SE:', SE.toFixed(2), 'D')
+      console.log('Step 2 - Base Curve (F₁):', F1.toFixed(2), 'D')
+      console.log('Step 3 - Back Surface (F₂):', F2.toFixed(2), 'D')
+      console.log('Step 4 - Front Radius (r₁):', r1.toFixed(2), 'mm')
+      console.log('Step 4 - Back Radius (r₂):', r2.toFixed(2), 'mm')
+      
+      // Calculate edge sagitta for verification
+      const h = diameter / 2
+      const s1_edge = r1 - Math.sqrt(r1 * r1 - h * h)
+      const s2_edge = r2 - Math.sqrt(r2 * r2 - h * h)
+      console.log('Step 5 - Front Sag at edge:', s1_edge.toFixed(2), 'mm')
+      console.log('Step 5 - Back Sag at edge:', s2_edge.toFixed(2), 'mm')
+      console.log('Step 6 - Expected ET:', (centerThickness + s2_edge - s1_edge).toFixed(2), 'mm')
+      console.log('=====================================')
+      window._lensDebugLogged = true
+    }
     
     // Determine lens type
     const isMyopic = prescription < 0
@@ -171,7 +195,7 @@ function AccurateLensGeometry({ centerThickness, edgeThickness, diameter, prescr
   )
 }
 
-function LensSimulator({ params }) {
+function LensSimulatorTest({ params }) {
   const calculateThickness = () => {
     const { diameter, prescription, index, edgeThickness } = params
     const D = diameter
@@ -249,8 +273,8 @@ function LensSimulator({ params }) {
       </Canvas>
       
       <div className="view-info">
-        <div className="view-badge">
-          👁️ 3D Görünüm - Gerçek Ölçekli
+        <div className="view-badge" style={{ backgroundColor: '#10b981' }}>
+          🧪 TEST - Professional Algorithm
         </div>
         <div className="measurements-overlay">
           <div className="measurement-row">
@@ -265,10 +289,13 @@ function LensSimulator({ params }) {
             <span className="measurement-label" style={{ color: '#4444ff' }}>●</span>
             <span className="measurement-text">Çap: {params.diameter} mm</span>
           </div>
+          <div className="measurement-row" style={{ marginTop: '8px', fontSize: '11px', color: '#666' }}>
+            <span>Vogel's Rule + Exact Sagitta</span>
+          </div>
         </div>
       </div>
     </div>
   )
 }
 
-export default LensSimulator
+export default LensSimulatorTest

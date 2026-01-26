@@ -2,35 +2,33 @@ import React from 'react'
 import './ControlPanel.css'
 
 function ControlPanel({ params, onUpdate }) {
-  // Kalınlık hesaplaması (geliştirilmiş)
+  // Kalınlık hesaplaması (düzeltilmiş - endüstri standardı)
   const calculateThickness = () => {
-    const { diameter, prescription, index, baseCurve, edgeThickness } = params
-    const radius = diameter / 2
+    const { diameter, prescription, index, edgeThickness } = params
+    const D = diameter
+    const P = Math.abs(prescription)
+    const n = index
     
-    // Base curve'den sagitta hesapla
-    const baseCurveRadius = 1000 / baseCurve // mm
-    const sagitta = baseCurveRadius - Math.sqrt(baseCurveRadius * baseCurveRadius - radius * radius)
-    
-    // Prescription faktörü
-    const prescriptionFactor = Math.abs(prescription) * radius * (index - 1) / index
+    // Endüstri standardı formül: (D² × |P|) / (2000 × (n-1))
+    const thicknessAddition = (D * D * P) / (2000 * (n - 1))
     
     let centerT, edgeT, maxEdgeT
     
     if (prescription < 0) {
       // Miyop - kenarlar kalın
-      centerT = edgeThickness + sagitta
-      edgeT = centerT + prescriptionFactor
+      centerT = edgeThickness
+      edgeT = centerT + thicknessAddition
       maxEdgeT = edgeT
     } else if (prescription > 0) {
       // Hipermetrop - merkez kalın
-      centerT = edgeThickness + sagitta + prescriptionFactor
-      edgeT = edgeThickness + sagitta
+      edgeT = edgeThickness
+      centerT = edgeT + thicknessAddition
       maxEdgeT = centerT
     } else {
       // Plano
-      centerT = edgeThickness + sagitta
-      edgeT = centerT
-      maxEdgeT = centerT
+      centerT = edgeThickness
+      edgeT = edgeThickness
+      maxEdgeT = edgeThickness
     }
     
     return {

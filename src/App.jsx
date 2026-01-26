@@ -1,71 +1,80 @@
-import React, { useState } from 'react'
+import React, { useState, createContext, useContext } from 'react'
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom'
-import LensSimulator from './components/LensSimulator'
-import ControlPanel from './components/ControlPanel'
+import LensWizard from './components/LensWizard'
 import GLBLensViewer from './components/GLBLensViewer'
 import './App.css'
 
-function SimulatorPage() {
-  const [params, setParams] = useState({
-    diameter: 75, // mm - lens çapı
-    prescription: -3.0, // dioptri (negatif = miyop, pozitif = hipermetrop)
-    index: 1.6, // refraktif indeks
-    baseCurve: 4.0, // base curve (dioptri)
-    edgeThickness: 1.5, // kenar kalınlığı (mm)
-    viewMode: 'side' // 'side' veya 'top'
-  })
+// Create context for wizard controls
+export const WizardControlsContext = createContext(null)
 
-  const updateParam = (key, value) => {
-    setParams(prev => ({
-      ...prev,
-      [key]: parseFloat(value) || value
-    }))
-  }
-
+function WizardPage() {
   return (
     <div className="app">
-      <header className="app-header">
-        <h1>🔍 Gözlük Camı Kalınlık Simülatörü</h1>
-        <p>Kesildikten sonraki cam kalınlığını birebir görselleştirin</p>
-      </header>
-      
-      <div className="app-container">
-        <ControlPanel params={params} onUpdate={updateParam} />
-        <LensSimulator params={params} />
-      </div>
+      <LensWizard />
     </div>
   )
 }
 
 function Navigation() {
+  // Navigation is now hidden - buttons moved to wizard header
+  return null
+}
+
+/* Original navigation - kept for future use
+function Navigation() {
   const location = useLocation()
+  const { wizardControls } = useContext(WizardControlsContext) || {}
   
   return (
     <nav className="main-nav">
-      <Link 
-        to="/" 
-        className={location.pathname === '/' ? 'active' : ''}
-      >
-        📐 Simülatör
-      </Link>
-      <Link 
-        to="/glb-viewer" 
-        className={location.pathname === '/glb-viewer' ? 'active' : ''}
-      >
-        🔍 3D Model Görüntüleyici
-      </Link>
+      {location.pathname === '/' && wizardControls && (
+        <div className="nav-center">
+          <button 
+            className="nav-btn"
+            onClick={wizardControls.onPrev}
+            disabled={wizardControls.isFirstStep}
+          >
+            ← Geri
+          </button>
+          <button 
+            className="nav-btn nav-btn-primary"
+            onClick={wizardControls.isLastStep ? wizardControls.onRestart : wizardControls.onNext}
+          >
+            {wizardControls.isLastStep ? '🔄 Yeni' : 'İleri →'}
+          </button>
+        </div>
+      )}
+      <div className="nav-right">
+        <Link to="/" className={location.pathname === '/' ? 'active' : ''}>
+          🧙 Hesaplayıcı
+        </Link>
+        <Link to="/glb-viewer" className={location.pathname === '/glb-viewer' ? 'active' : ''}>
+          🔍 3D Model Görüntüleyici
+        </Link>
+      </div>
     </nav>
+  )
+}
+*/
+
+function AppContent() {
+  const [wizardControls, setWizardControls] = useState(null)
+  
+  return (
+    <WizardControlsContext.Provider value={{ wizardControls, setWizardControls }}>
+      <Navigation />
+      <Routes>
+        <Route path="/" element={<WizardPage />} />
+        <Route path="/glb-viewer" element={<GLBLensViewer />} />
+      </Routes>
+    </WizardControlsContext.Provider>
   )
 }
 
 function App() {
   return (
     <Router>
-      <Navigation />
-      <Routes>
-        <Route path="/" element={<SimulatorPage />} />
-        <Route path="/glb-viewer" element={<GLBLensViewer />} />
-      </Routes>
+      <AppContent />
     </Router>
   )
 }

@@ -1,0 +1,138 @@
+.selection-group {
+  margin-bottom: 32px;
+}
+
+.selection-group h3 {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a202c;
+  margin-bottom: 16px;
+}
+
+.size-grid,
+.type-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 12px;
+}
+
+.manual-card {
+  background: #f8fafc;
+  border: 2px dashed #cbd5e0;
+}
+
+.manual-card:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  transform: none;
+}
+
+.manual-input-inline {
+  margin-top: 8px;
+}
+
+.manual-input-inline input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #cbd5e0;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2563eb;
+}
+
+.manual-input-inline input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.size-card,
+.type-card {
+  padding: 16px 12px;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.size-card:hover,
+.type-card:hover {
+  border-color: #2563eb;
+  background: #f8fafc;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.size-card.selected,
+.type-card.selected {
+  border-color: #2563eb;
+  background: #eff6ff;
+  border-width: 2px;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+
+.size-card h4,
+.type-card h4 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #2563eb;
+  margin-bottom: 4px;
+}
+
+.card-size {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2563eb;
+  margin: 6px 0;
+}
+
+.card-desc {
+  color: #64748b;
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.type-card input[type="radio"] {
+  display: none;
+}
+
+.manual-input {
+  display: none;
+}
+
+.manual-content {
+  display: none;
+}
+
+.manual-row {
+  display: none;
+}
+
+@media (max-width: 1200px) {
+  .size-grid,
+  .type-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .size-grid,
+  .type-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .size-card h4,
+  .type-card h4 {
+    font-size: 13px;
+  }
+  
+  .card-desc {
+    font-size: 10px;
+  }
+}
