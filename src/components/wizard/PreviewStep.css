@@ -1,0 +1,370 @@
+.preview-step {
+  max-width: 100%;
+  margin: 0;
+}
+
+.preview-step .step-content {
+  max-width: 100%;
+}
+
+/* Eye selector - Vertical on left side */
+.eye-selector-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: white;
+  border-right: 1px solid #e1e8ed;
+  width: 140px;
+}
+
+.eye-selector-vertical .eye-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 12px;
+  background: white;
+  border: 2px solid #cbd5e0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 13px;
+  font-weight: 500;
+  color: #475569;
+}
+
+.eye-selector-vertical .eye-btn:hover {
+  border-color: #2563eb;
+  transform: translateX(2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.eye-selector-vertical .eye-btn.active {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
+.eye-selector-vertical .eye-icon {
+  font-size: 1.5rem;
+}
+
+/* Old horizontal eye selector - kept for reference */
+/* .eye-selector {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  justify-content: center;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e1e8ed;
+}
+
+.eye-selector .eye-btn {
+  flex: 1;
+  max-width: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 10px 16px;
+  background: white;
+  border: 2px solid #cbd5e0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+  font-weight: 500;
+  color: #475569;
+}
+
+.eye-selector .eye-btn:hover {
+  border-color: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.eye-selector .eye-btn.active {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
+.eye-selector .eye-icon {
+  font-size: 1.3rem;
+} */
+
+/* Shape toggle buttons - kept for reference */
+/* .shape-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  justify-content: center;
+}
+
+.shape-toggle .toggle-btn {
+  padding: 8px 20px;
+  border: 1px solid #cbd5e1;
+  background: white;
+  color: #64748b;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.shape-toggle .toggle-btn:hover {
+  border-color: #2563eb;
+  color: #2563eb;
+}
+
+.shape-toggle .toggle-btn.active {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+} */
+
+.preview-container-single {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.preview-layout {
+  display: grid;
+  grid-template-columns: auto 1fr 350px;
+  gap: 0;
+  height: 100%;
+  flex: 1;
+}
+
+.canvas-wrapper-full {
+  background: #f8fafc;
+  border-right: 1px solid #e1e8ed;
+  padding: 16px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.measurements-panel-combined {
+  background: white;
+  padding: 24px;
+  overflow-y: auto;
+  height: 100%;
+}
+
+.measurements-panel-combined > h3 {
+  margin: 0 0 20px 0;
+  font-size: 16px;
+  color: #1a202c;
+  font-weight: 600;
+  border-bottom: 1px solid #e1e8ed;
+  padding-bottom: 12px;
+}
+
+.measurements-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.eye-measurements {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.eye-measurements h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #475569;
+}
+
+@media (max-width: 1024px) {
+  .preview-container-single {
+    grid-template-columns: 1fr;
+  }
+  
+  .measurements-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.preview-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.lens-view {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+}
+
+.lens-label {
+  grid-column: 1 / -1;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1a202c;
+  text-align: center;
+  padding: 0.75rem;
+  background: #eff6ff;
+  border-radius: 6px;
+  border: 1px solid #bfdbfe;
+}
+
+@media (min-width: 1200px) {
+  .preview-container {
+    flex-direction: row;
+  }
+  
+  .lens-view {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .lens-label {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 1024px) {
+  .lens-view {
+    grid-template-columns: 1fr;
+  }
+}
+
+.canvas-wrapper {
+  background: #f8fafc;
+  border: 1px solid #e1e8ed;
+  border-radius: 6px;
+  padding: 16px;
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.measurements-panel {
+  background: white;
+  border: 1px solid #e1e8ed;
+  border-radius: 6px;
+  padding: 20px;
+}
+
+.measurements-panel h3 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  color: #1a202c;
+  font-weight: 600;
+  border-bottom: 1px solid #e1e8ed;
+  padding-bottom: 12px;
+}
+
+.measurement-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.measurement-item:last-child {
+  border-bottom: none;
+}
+
+.measurement-item.highlight {
+  background: #eff6ff;
+  padding: 12px 16px;
+  margin: 8px -16px 0;
+  border-radius: 6px;
+  border-bottom: none;
+}
+
+.measurement-item .label {
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.measurement-item .value {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2563eb;
+}
+
+.measurement-item.highlight .value {
+  font-size: 20px;
+  color: #1d4ed8;
+}
+
+.info-box {
+  display: flex;
+  gap: 12px;
+  background: #f8fafc;
+  border-left: 3px solid #2563eb;
+  padding: 16px;
+  border-radius: 6px;
+  margin-top: 24px;
+}
+
+.info-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.info-content {
+  font-size: 14px;
+  color: #475569;
+  line-height: 1.6;
+}
+
+.info-content strong {
+  color: #1a202c;
+  font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .preview-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .canvas-wrapper {
+    min-height: 300px;
+    padding: 12px;
+  }
+
+  .measurements-panel {
+    padding: 16px;
+  }
+
+  .measurements-panel h3 {
+    font-size: 15px;
+  }
+
+  .measurement-item .label {
+    font-size: 13px;
+  }
+
+  .measurement-item .value {
+    font-size: 15px;
+  }
+
+  .measurement-item.highlight .value {
+    font-size: 18px;
+  }
+}
