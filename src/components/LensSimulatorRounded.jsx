@@ -14,7 +14,7 @@ function AccurateLensGeometry({
   transmission = 0.9, 
   opacity = 0.85, 
   reflection = 1.5, 
-  color = '#4a90e2',
+  color = '#ffffff',
   roughness = 0.05,
   metalness = 0.1,
   clearcoat = 1.0,
@@ -428,7 +428,7 @@ function LensModel({ params, controlsRef, showDebugLines }) {
               transmission={params.lensTransmission || 0.9}
               opacity={params.lensOpacity || 0.85}
               reflection={params.lensReflection || 1.5}
-              color={params.lensColor || '#4a90e2'}
+              color={params.lensColor || '#ffffff'}
               roughness={params.lensRoughness || 0.05}
               metalness={params.lensMetalness || 0.1}
               clearcoat={params.lensClearcoat || 1.0}
@@ -449,7 +449,7 @@ function LensModel({ params, controlsRef, showDebugLines }) {
               transmission={params.lensTransmission || 0.9}
               opacity={params.lensOpacity || 0.85}
               reflection={params.lensReflection || 1.5}
-              color={params.lensColor || '#4a90e2'}
+              color={params.lensColor || '#ffffff'}
               roughness={params.lensRoughness || 0.05}
               metalness={params.lensMetalness || 0.1}
               clearcoat={params.lensClearcoat || 1.0}
@@ -547,7 +547,7 @@ function LensModel({ params, controlsRef, showDebugLines }) {
             transmission={params.lensTransmission || 0.9}
             opacity={params.lensOpacity || 0.85}
             reflection={params.lensReflection || 1.5}
-            color={params.lensColor || '#4a90e2'}
+            color={params.lensColor || '#ffffff'}
             roughness={params.lensRoughness || 0.05}
             metalness={params.lensMetalness || 0.1}
             clearcoat={params.lensClearcoat || 1.0}

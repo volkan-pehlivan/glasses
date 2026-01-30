@@ -64,7 +64,7 @@ function PreviewStep({ data, onUpdate }) {
                 lensTransmission: data.lensTransmission || 0.9,
                 lensOpacity: data.lensOpacity || 0.85,
                 lensReflection: data.lensReflection || 1.5,
-                lensColor: data.lensColor || '#4a90e2',
+                lensColor: data.lensColor || '#ffffff',
                 lensRoughness: data.lensRoughness || 0.05,
                 lensMetalness: data.lensMetalness || 0.1,
                 lensClearcoat: data.lensClearcoat || 1.0,
@@ -93,64 +93,66 @@ function PreviewStep({ data, onUpdate }) {
               
               {openAccordion === 'colors' && (
                 <div className="accordion-content">
-                  {/* Lens Color */}
-                  <div className="appearance-control">
-                    <label>Cam Rengi</label>
-                    <div className="color-options">
-                      <button 
-                        className={`color-btn ${(data.lensColor || '#4a90e2') === '#4a90e2' ? 'active' : ''}`}
-                        style={{ background: '#4a90e2' }}
-                        onClick={() => onUpdate({ lensColor: '#4a90e2' })}
-                        title="Klasik Mavi"
-                      />
-                      <button 
-                        className={`color-btn ${data.lensColor === '#f0f8ff' ? 'active' : ''}`}
-                        style={{ background: '#f0f8ff' }}
-                        onClick={() => onUpdate({ lensColor: '#f0f8ff' })}
-                        title="Açık Mavi"
-                      />
-                      <button 
-                        className={`color-btn ${data.lensColor === '#ffffff' ? 'active' : ''}`}
-                        style={{ background: '#ffffff', border: '1px solid #ddd' }}
-                        onClick={() => onUpdate({ lensColor: '#ffffff' })}
-                        title="Beyaz"
-                      />
-                      <button 
-                        className={`color-btn ${data.lensColor === '#fffacd' ? 'active' : ''}`}
-                        style={{ background: '#fffacd' }}
-                        onClick={() => onUpdate({ lensColor: '#fffacd' })}
-                        title="Sarı"
-                      />
-                      <button 
-                        className={`color-btn ${data.lensColor === '#ffe4e1' ? 'active' : ''}`}
-                        style={{ background: '#ffe4e1' }}
-                        onClick={() => onUpdate({ lensColor: '#ffe4e1' })}
-                        title="Pembe"
-                      />
-                      <button 
-                        className={`color-btn ${data.lensColor === '#e0f0e0' ? 'active' : ''}`}
-                        style={{ background: '#e0f0e0' }}
-                        onClick={() => onUpdate({ lensColor: '#e0f0e0' })}
-                        title="Yeşil"
-                      />
-                      <button 
-                        className={`color-btn ${data.lensColor === '#f0e0ff' ? 'active' : ''}`}
-                        style={{ background: '#f0e0ff' }}
-                        onClick={() => onUpdate({ lensColor: '#f0e0ff' })}
-                        title="Mor"
-                      />
+                  {/* Lens Color - TEMPORARILY HIDDEN */}
+                  {false && (
+                    <div className="appearance-control">
+                      <label>Cam Rengi</label>
+                      <div className="color-options">
+                        <button 
+                          className={`color-btn ${(data.lensColor || '#ffffff') === '#ffffff' ? 'active' : ''}`}
+                          style={{ background: '#ffffff', border: '1px solid #ddd' }}
+                          onClick={() => onUpdate({ lensColor: '#ffffff' })}
+                          title="Beyaz"
+                        />
+                        <button 
+                          className={`color-btn ${data.lensColor === '#4a90e2' ? 'active' : ''}`}
+                          style={{ background: '#4a90e2' }}
+                          onClick={() => onUpdate({ lensColor: '#4a90e2' })}
+                          title="Klasik Mavi"
+                        />
+                        <button 
+                          className={`color-btn ${data.lensColor === '#f0f8ff' ? 'active' : ''}`}
+                          style={{ background: '#f0f8ff' }}
+                          onClick={() => onUpdate({ lensColor: '#f0f8ff' })}
+                          title="Açık Mavi"
+                        />
+                        <button 
+                          className={`color-btn ${data.lensColor === '#fffacd' ? 'active' : ''}`}
+                          style={{ background: '#fffacd' }}
+                          onClick={() => onUpdate({ lensColor: '#fffacd' })}
+                          title="Sarı"
+                        />
+                        <button 
+                          className={`color-btn ${data.lensColor === '#ffe4e1' ? 'active' : ''}`}
+                          style={{ background: '#ffe4e1' }}
+                          onClick={() => onUpdate({ lensColor: '#ffe4e1' })}
+                          title="Pembe"
+                        />
+                        <button 
+                          className={`color-btn ${data.lensColor === '#e0f0e0' ? 'active' : ''}`}
+                          style={{ background: '#e0f0e0' }}
+                          onClick={() => onUpdate({ lensColor: '#e0f0e0' })}
+                          title="Yeşil"
+                        />
+                        <button 
+                          className={`color-btn ${data.lensColor === '#f0e0ff' ? 'active' : ''}`}
+                          style={{ background: '#f0e0ff' }}
+                          onClick={() => onUpdate({ lensColor: '#f0e0ff' })}
+                          title="Mor"
+                        />
+                      </div>
+                      <div className="color-picker-wrapper">
+                        <label className="color-picker-label">Özel Renk:</label>
+                        <input
+                          type="color"
+                          value={data.lensColor || '#ffffff'}
+                          onChange={(e) => onUpdate({ lensColor: e.target.value })}
+                          className="color-picker"
+                        />
+                        <span className="color-value">{data.lensColor || '#ffffff'}</span>
+                      </div>
                     </div>
-                    <div className="color-picker-wrapper">
-                      <label className="color-picker-label">Özel Renk:</label>
-                      <input
-                        type="color"
-                        value={data.lensColor || '#4a90e2'}
-                        onChange={(e) => onUpdate({ lensColor: e.target.value })}
-                        className="color-picker"
-                      />
-                      <span className="color-value">{data.lensColor || '#4a90e2'}</span>
-                    </div>
-                  </div>
+                  )}
                   
                   {/* Background Environment */}
                   <div className="appearance-control">
