@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import Tooltip from '../common/Tooltip'
 import './PrescriptionStep.css'
 
 function PrescriptionStep({ data, onUpdate }) {
@@ -18,13 +17,6 @@ function PrescriptionStep({ data, onUpdate }) {
 
   return (
     <div className="wizard-step prescription-step">
-      <div className="step-header">
-        <h2>Gözlük Reçetesi</h2>
-        <p className="step-description">
-          Reçete değerlerinizi girin
-        </p>
-      </div>
-
       <div className="step-content">
         {/* Prescription table */}
         <div className="prescription-table-container">
@@ -34,15 +26,12 @@ function PrescriptionStep({ data, onUpdate }) {
                 <th className="eye-column"></th>
                 <th>
                   Sph (Küre)
-                  <Tooltip content="Sphere - Ana görme düzeltmesi. Negatif (-) miyop, pozitif (+) hipermetrop" />
                 </th>
                 <th>
                   Cyl (Silindir)
-                  <Tooltip content="Cylinder - Astigmat düzeltmesi (varsa)" />
                 </th>
                 <th>
                   Axis (Eksen)
-                  <Tooltip content="Astigmat açısı (0-180°)" />
                 </th>
               </tr>
             </thead>
@@ -146,6 +135,81 @@ function PrescriptionStep({ data, onUpdate }) {
           </button>
         </div>
 
+        {/* Pupillary Distance (PD) - HIDDEN FOR NOW, KEEP FOR FUTURE USE */}
+        {false && (
+          <div className="pd-section">
+            <h3>👁️ Pupil Mesafesi (PD)</h3>
+            <p className="pd-description">Gözbebekleriniz arasındaki mesafe (mm)</p>
+            
+            <div className="pd-input-group">
+              <div className="pd-option">
+                <label>
+                  <input
+                    type="radio"
+                    name="pdType"
+                    checked={!data.useSeparatePD}
+                    onChange={() => onUpdate({ useSeparatePD: false })}
+                  />
+                  <span>Tek PD (Her iki göz için)</span>
+                </label>
+                <input
+                  type="number"
+                  className="pd-input"
+                  value={data.totalPD || 63}
+                  onChange={(e) => onUpdate({ totalPD: parseFloat(e.target.value) || 63 })}
+                  min="50"
+                  max="80"
+                  step="0.5"
+                  disabled={data.useSeparatePD}
+                />
+                <span className="unit">mm</span>
+              </div>
+
+              <div className="pd-option">
+                <label>
+                  <input
+                    type="radio"
+                    name="pdType"
+                    checked={data.useSeparatePD}
+                    onChange={() => onUpdate({ useSeparatePD: true })}
+                  />
+                  <span>Ayrı PD (Her göz için)</span>
+                </label>
+                <div className="pd-separate-inputs">
+                  <div className="pd-eye-input">
+                    <label>Sağ (OD):</label>
+                    <input
+                      type="number"
+                      className="pd-input"
+                      value={data.rightPD || 31.5}
+                      onChange={(e) => onUpdate({ rightPD: parseFloat(e.target.value) || 31.5 })}
+                      min="25"
+                      max="40"
+                      step="0.5"
+                      disabled={!data.useSeparatePD}
+                    />
+                    <span className="unit">mm</span>
+                  </div>
+                  <div className="pd-eye-input">
+                    <label>Sol (OS):</label>
+                    <input
+                      type="number"
+                      className="pd-input"
+                      value={data.leftPD || 31.5}
+                      onChange={(e) => onUpdate({ leftPD: parseFloat(e.target.value) || 31.5 })}
+                      min="25"
+                      max="40"
+                      step="0.5"
+                      disabled={!data.useSeparatePD}
+                    />
+                    <span className="unit">mm</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Quick presets for common prescriptions */}
         <div className="quick-presets-section">
           <h3>Hızlı Seçim (Sph)</h3>
@@ -164,15 +228,6 @@ function PrescriptionStep({ data, onUpdate }) {
                 {value > 0 ? `+${value}` : value}
               </button>
             ))}
-          </div>
-        </div>
-
-        {/* Info box */}
-        <div className="info-box">
-          <div className="info-icon">💡</div>
-          <div className="info-content">
-            <strong>İpucu:</strong> Reçetenizde sadece Sph (Küre) değeri varsa, Cyl ve Axis alanlarını boş bırakabilirsiniz.
-            Değerler 0.25 adımlarla artırılabilir.
           </div>
         </div>
       </div>

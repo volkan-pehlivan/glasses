@@ -1,5 +1,4 @@
 import React from 'react'
-import Tooltip from '../common/Tooltip'
 import './FrameStep.css'
 
 function FrameStep({ data, onUpdate }) {
@@ -28,19 +27,11 @@ function FrameStep({ data, onUpdate }) {
 
   return (
     <div className="wizard-step frame-step">
-      <div className="step-header">
-        <h2>Çerçeve Bilgileri</h2>
-        <p className="step-description">
-          Her göz için çerçeve boyutunu seçin
-        </p>
-      </div>
-
       <div className="step-content">
         {/* Right Eye Frame size selection */}
         <div className="selection-group">
           <h3>
             👁️ Sağ Göz (OD) - Çerçeve Boyutu
-            <Tooltip content="Çerçeve boyutu cam kalınlığını etkiler. Büyük çerçeveler daha kalın cam gerektirir." />
           </h3>
           
           <div className="size-grid">
@@ -77,7 +68,6 @@ function FrameStep({ data, onUpdate }) {
         <div className="selection-group">
           <h3>
             👁️ Sol Göz (OS) - Çerçeve Boyutu
-            <Tooltip content="Çerçeve boyutu cam kalınlığını etkiler. Büyük çerçeveler daha kalın cam gerektirir." />
           </h3>
           
           <div className="size-grid">
@@ -107,15 +97,6 @@ function FrameStep({ data, onUpdate }) {
                 />
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Info box */}
-        <div className="info-box">
-          <div className="info-icon">💡</div>
-          <div className="info-content">
-            <strong>İpucu:</strong> Çerçeve boyutu ne kadar büyükse, cam o kadar kalın olur. 
-            Yüksek reçeteler için daha küçük çerçeve seçmek cam kalınlığını azaltır.
           </div>
         </div>
       </div>

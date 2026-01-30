@@ -67,13 +67,6 @@ function ShapeStep({ data, onUpdate, onNext, onPrev }) {
 
   return (
     <div className="wizard-step shape-step">
-      <div className="step-header">
-        <h2>Cam Şekli Seçimi</h2>
-        <p className="step-description">
-          Gözlük camınızın şeklini seçin
-        </p>
-      </div>
-
       <div className="step-content">
         <div className="shapes-grid">
           {shapes.map((shape) => (

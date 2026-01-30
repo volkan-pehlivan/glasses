@@ -3,9 +3,10 @@ import LensSimulator from '../LensSimulator'
 import LensSimulatorRounded from '../LensSimulatorRounded'
 import './PreviewStep.css'
 
-function PreviewStep({ data }) {
+function PreviewStep({ data, onUpdate }) {
   const [useRounded, setUseRounded] = useState(true) // Always use rounded
   const [activeEye, setActiveEye] = useState('both') // 'right', 'left', or 'both'
+  const [openAccordion, setOpenAccordion] = useState(null) // 'colors', 'materials', 'measurements', or null (all closed by default)
   
   // Calculate thickness for a specific eye
   const calculateThickness = (prescription, index, diameter) => {
@@ -38,41 +39,9 @@ function PreviewStep({ data }) {
 
   return (
     <div className="wizard-step preview-step">
-      <div className="step-header">
-        <h2>3D Önizleme</h2>
-        <p className="step-description">
-          Gözlük camlarınızın gerçek kalınlığını görün
-        </p>
-      </div>
-
       <div className="step-content">
-        {/* 3D Viewer and Measurements - Side by side with eye selector on left */}
+        {/* 3D Viewer and Measurements - Side by side */}
         <div className="preview-layout">
-          {/* Eye selector - Left side vertical */}
-          <div className="eye-selector-vertical">
-            <button 
-              className={`eye-btn ${activeEye === 'right' ? 'active' : ''}`}
-              onClick={() => setActiveEye('right')}
-            >
-              <span className="eye-icon">👁️</span>
-              <span>Sağ Göz</span>
-            </button>
-            <button 
-              className={`eye-btn ${activeEye === 'both' ? 'active' : ''}`}
-              onClick={() => setActiveEye('both')}
-            >
-              <span className="eye-icon">👓</span>
-              <span>Her İkisi</span>
-            </button>
-            <button 
-              className={`eye-btn ${activeEye === 'left' ? 'active' : ''}`}
-              onClick={() => setActiveEye('left')}
-            >
-              <span className="eye-icon">👁️</span>
-              <span>Sol Göz</span>
-            </button>
-          </div>
-
           <div className="canvas-wrapper-full">
             <SimulatorComponent 
               params={{ 
@@ -88,16 +57,332 @@ function PreviewStep({ data }) {
                 leftIndex: data.leftIndex,
                 rightDiameter: data.rightDiameter,
                 leftDiameter: data.leftDiameter,
-                lensShape: data.lensShape || 'classic'
-              }} 
+                lensShape: data.lensShape || 'classic',
+                backgroundEnvironment: data.backgroundEnvironment || 'city',
+                backgroundColor: data.backgroundColor || 'default',
+                customBackgroundColor: data.customBackgroundColor || '#1a1a1a',
+                lensTransmission: data.lensTransmission || 0.9,
+                lensOpacity: data.lensOpacity || 0.85,
+                lensReflection: data.lensReflection || 1.5,
+                lensColor: data.lensColor || '#4a90e2',
+                lensRoughness: data.lensRoughness || 0.05,
+                lensMetalness: data.lensMetalness || 0.1,
+                lensClearcoat: data.lensClearcoat || 1.0,
+                lensClearcoatRoughness: data.lensClearcoatRoughness || 0.1,
+                lensThickness: data.lensThickness || 0.5,
+                lensIOR: data.lensIOR || 1.5
+              }}
+              activeEye={activeEye}
+              onEyeChange={setActiveEye}
+              bridgeWidth={data.bridgeWidth || 17}
+              onBridgeWidthChange={(value) => onUpdate({ bridgeWidth: value })}
             />
           </div>
 
           {/* Measurements panel - Right side */}
           <div className="measurements-panel-combined">
-            <h3>Ölçümler</h3>
+            {/* Colors & Environment Accordion */}
+            <div className="appearance-accordion">
+              <button 
+                className={`accordion-header ${openAccordion === 'colors' ? 'open' : ''}`}
+                onClick={() => setOpenAccordion(openAccordion === 'colors' ? null : 'colors')}
+              >
+                <span>🎨 Renkler ve Ortam</span>
+                <span className="accordion-icon">{openAccordion === 'colors' ? '▼' : '▶'}</span>
+              </button>
+              
+              {openAccordion === 'colors' && (
+                <div className="accordion-content">
+                  {/* Lens Color */}
+                  <div className="appearance-control">
+                    <label>Cam Rengi</label>
+                    <div className="color-options">
+                      <button 
+                        className={`color-btn ${(data.lensColor || '#4a90e2') === '#4a90e2' ? 'active' : ''}`}
+                        style={{ background: '#4a90e2' }}
+                        onClick={() => onUpdate({ lensColor: '#4a90e2' })}
+                        title="Klasik Mavi"
+                      />
+                      <button 
+                        className={`color-btn ${data.lensColor === '#f0f8ff' ? 'active' : ''}`}
+                        style={{ background: '#f0f8ff' }}
+                        onClick={() => onUpdate({ lensColor: '#f0f8ff' })}
+                        title="Açık Mavi"
+                      />
+                      <button 
+                        className={`color-btn ${data.lensColor === '#ffffff' ? 'active' : ''}`}
+                        style={{ background: '#ffffff', border: '1px solid #ddd' }}
+                        onClick={() => onUpdate({ lensColor: '#ffffff' })}
+                        title="Beyaz"
+                      />
+                      <button 
+                        className={`color-btn ${data.lensColor === '#fffacd' ? 'active' : ''}`}
+                        style={{ background: '#fffacd' }}
+                        onClick={() => onUpdate({ lensColor: '#fffacd' })}
+                        title="Sarı"
+                      />
+                      <button 
+                        className={`color-btn ${data.lensColor === '#ffe4e1' ? 'active' : ''}`}
+                        style={{ background: '#ffe4e1' }}
+                        onClick={() => onUpdate({ lensColor: '#ffe4e1' })}
+                        title="Pembe"
+                      />
+                      <button 
+                        className={`color-btn ${data.lensColor === '#e0f0e0' ? 'active' : ''}`}
+                        style={{ background: '#e0f0e0' }}
+                        onClick={() => onUpdate({ lensColor: '#e0f0e0' })}
+                        title="Yeşil"
+                      />
+                      <button 
+                        className={`color-btn ${data.lensColor === '#f0e0ff' ? 'active' : ''}`}
+                        style={{ background: '#f0e0ff' }}
+                        onClick={() => onUpdate({ lensColor: '#f0e0ff' })}
+                        title="Mor"
+                      />
+                    </div>
+                    <div className="color-picker-wrapper">
+                      <label className="color-picker-label">Özel Renk:</label>
+                      <input
+                        type="color"
+                        value={data.lensColor || '#4a90e2'}
+                        onChange={(e) => onUpdate({ lensColor: e.target.value })}
+                        className="color-picker"
+                      />
+                      <span className="color-value">{data.lensColor || '#4a90e2'}</span>
+                    </div>
+                  </div>
+                  
+                  {/* Background Environment */}
+                  <div className="appearance-control">
+                    <label>Arka Plan Ortamı (Yansıma)</label>
+                    <select
+                      value={data.backgroundEnvironment || 'city'}
+                      onChange={(e) => onUpdate({ backgroundEnvironment: e.target.value })}
+                      className="appearance-select"
+                    >
+                      <option value="city">Şehir</option>
+                      <option value="sunset">Gün Batımı</option>
+                      <option value="studio">Stüdyo</option>
+                      <option value="none">Yok</option>
+                    </select>
+                  </div>
+                  
+                  {/* Background Color */}
+                  <div className="appearance-control">
+                    <label>Arka Plan Rengi</label>
+                    <div className="color-options">
+                      <button 
+                        className={`color-btn ${(data.backgroundColor || 'default') === 'default' ? 'active' : ''}`}
+                        style={{ background: '#1a1a1a' }}
+                        onClick={() => onUpdate({ backgroundColor: 'default' })}
+                        title="Varsayılan"
+                      />
+                      <button 
+                        className={`color-btn ${data.backgroundColor === 'white' ? 'active' : ''}`}
+                        style={{ background: '#ffffff', border: '1px solid #ddd' }}
+                        onClick={() => onUpdate({ backgroundColor: 'white' })}
+                        title="Beyaz"
+                      />
+                      <button 
+                        className={`color-btn ${data.backgroundColor === 'lightgray' ? 'active' : ''}`}
+                        style={{ background: '#f0f0f0' }}
+                        onClick={() => onUpdate({ backgroundColor: 'lightgray' })}
+                        title="Açık Gri"
+                      />
+                      <button 
+                        className={`color-btn ${data.backgroundColor === 'gray' ? 'active' : ''}`}
+                        style={{ background: '#808080' }}
+                        onClick={() => onUpdate({ backgroundColor: 'gray' })}
+                        title="Gri"
+                      />
+                      <button 
+                        className={`color-btn ${data.backgroundColor === 'black' ? 'active' : ''}`}
+                        style={{ background: '#000000' }}
+                        onClick={() => onUpdate({ backgroundColor: 'black' })}
+                        title="Siyah"
+                      />
+                      <button 
+                        className={`color-btn ${data.backgroundColor === 'lightblue' ? 'active' : ''}`}
+                        style={{ background: '#87ceeb' }}
+                        onClick={() => onUpdate({ backgroundColor: 'lightblue' })}
+                        title="Açık Mavi"
+                      />
+                      <button 
+                        className={`color-btn ${data.backgroundColor === 'cream' ? 'active' : ''}`}
+                        style={{ background: '#f5f5dc' }}
+                        onClick={() => onUpdate({ backgroundColor: 'cream' })}
+                        title="Krem"
+                      />
+                    </div>
+                    <div className="color-picker-wrapper">
+                      <label className="color-picker-label">Özel Renk:</label>
+                      <input
+                        type="color"
+                        value={data.backgroundColor === 'custom' ? (data.customBackgroundColor || '#1a1a1a') : '#1a1a1a'}
+                        onChange={(e) => onUpdate({ backgroundColor: 'custom', customBackgroundColor: e.target.value })}
+                        className="color-picker"
+                      />
+                      <span className="color-value">
+                        {data.backgroundColor === 'custom' ? (data.customBackgroundColor || '#1a1a1a') : 
+                         data.backgroundColor === 'white' ? '#ffffff' :
+                         data.backgroundColor === 'lightgray' ? '#f0f0f0' :
+                         data.backgroundColor === 'gray' ? '#808080' :
+                         data.backgroundColor === 'black' ? '#000000' :
+                         data.backgroundColor === 'lightblue' ? '#87ceeb' :
+                         data.backgroundColor === 'cream' ? '#f5f5dc' :
+                         '#1a1a1a'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
             
-            <div className="measurements-grid">
+            {/* Material Properties Accordion */}
+            <div className="appearance-accordion">
+              <button 
+                className={`accordion-header ${openAccordion === 'materials' ? 'open' : ''}`}
+                onClick={() => setOpenAccordion(openAccordion === 'materials' ? null : 'materials')}
+              >
+                <span>⚙️ Malzeme Özellikleri</span>
+                <span className="accordion-icon">{openAccordion === 'materials' ? '▼' : '▶'}</span>
+              </button>
+              
+              {openAccordion === 'materials' && (
+                <div className="accordion-content">
+                  <div className="appearance-control">
+                    <label>Şeffaflık (Transmission)</label>
+                    <input
+                      type="range"
+                      min="0.1"
+                      max="1"
+                      step="0.05"
+                      value={data.lensTransmission || 0.9}
+                      onChange={(e) => onUpdate({ lensTransmission: parseFloat(e.target.value) })}
+                    />
+                    <span className="value">{((data.lensTransmission || 0.9) * 100).toFixed(0)}%</span>
+                  </div>
+                  
+                  <div className="appearance-control">
+                    <label>Görünürlük (Opacity)</label>
+                    <input
+                      type="range"
+                      min="0.1"
+                      max="1"
+                      step="0.05"
+                      value={data.lensOpacity || 0.85}
+                      onChange={(e) => onUpdate({ lensOpacity: parseFloat(e.target.value) })}
+                    />
+                    <span className="value">{((data.lensOpacity || 0.85) * 100).toFixed(0)}%</span>
+                  </div>
+                  
+                  <div className="appearance-control">
+                    <label>Yansıma (Reflection)</label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="2"
+                      step="0.1"
+                      value={data.lensReflection || 1.5}
+                      onChange={(e) => onUpdate({ lensReflection: parseFloat(e.target.value) })}
+                    />
+                    <span className="value">{(data.lensReflection || 1.5).toFixed(1)}</span>
+                  </div>
+                  
+                  <div className="appearance-control">
+                    <label>Pürüzlülük (Roughness)</label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.01"
+                      value={data.lensRoughness || 0.05}
+                      onChange={(e) => onUpdate({ lensRoughness: parseFloat(e.target.value) })}
+                    />
+                    <span className="value">{((data.lensRoughness || 0.05) * 100).toFixed(0)}%</span>
+                  </div>
+                  
+                  <div className="appearance-control">
+                    <label>Metaliklik (Metalness)</label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.05"
+                      value={data.lensMetalness || 0.1}
+                      onChange={(e) => onUpdate({ lensMetalness: parseFloat(e.target.value) })}
+                    />
+                    <span className="value">{((data.lensMetalness || 0.1) * 100).toFixed(0)}%</span>
+                  </div>
+                  
+                  <div className="appearance-control">
+                    <label>Parlak Kaplama (Clearcoat)</label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.05"
+                      value={data.lensClearcoat || 1.0}
+                      onChange={(e) => onUpdate({ lensClearcoat: parseFloat(e.target.value) })}
+                    />
+                    <span className="value">{((data.lensClearcoat || 1.0) * 100).toFixed(0)}%</span>
+                  </div>
+                  
+                  <div className="appearance-control">
+                    <label>Kaplama Pürüzü (Clearcoat Roughness)</label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.01"
+                      value={data.lensClearcoatRoughness || 0.1}
+                      onChange={(e) => onUpdate({ lensClearcoatRoughness: parseFloat(e.target.value) })}
+                    />
+                    <span className="value">{((data.lensClearcoatRoughness || 0.1) * 100).toFixed(0)}%</span>
+                  </div>
+                  
+                  <div className="appearance-control">
+                    <label>Kalınlık Etkisi (Thickness)</label>
+                    <input
+                      type="range"
+                      min="0.1"
+                      max="2"
+                      step="0.1"
+                      value={data.lensThickness || 0.5}
+                      onChange={(e) => onUpdate({ lensThickness: parseFloat(e.target.value) })}
+                    />
+                    <span className="value">{(data.lensThickness || 0.5).toFixed(1)}</span>
+                  </div>
+                  
+                  <div className="appearance-control">
+                    <label>Kırılma İndeksi (IOR)</label>
+                    <input
+                      type="range"
+                      min="1.0"
+                      max="2.0"
+                      step="0.05"
+                      value={data.lensIOR || 1.5}
+                      onChange={(e) => onUpdate({ lensIOR: parseFloat(e.target.value) })}
+                    />
+                    <span className="value">{(data.lensIOR || 1.5).toFixed(2)}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {/* Measurements Accordion */}
+            <div className="appearance-accordion">
+              <button 
+                className={`accordion-header ${openAccordion === 'measurements' ? 'open' : ''}`}
+                onClick={() => setOpenAccordion(openAccordion === 'measurements' ? null : 'measurements')}
+              >
+                <span>📏 Ölçümler</span>
+                <span className="accordion-icon">{openAccordion === 'measurements' ? '▼' : '▶'}</span>
+              </button>
+              
+              {openAccordion === 'measurements' && (
+                <div className="accordion-content">
+                  <div className="measurements-grid">
               {(activeEye === 'right' || activeEye === 'both') && (
                 <div className="eye-measurements">
                   <h4>👁️ Sağ Göz (OD)</h4>
@@ -150,15 +435,9 @@ function PreviewStep({ data }) {
                 </div>
               )}
             </div>
-          </div>
-        </div>
-
-        {/* Info box */}
-        <div className="info-box">
-          <div className="info-icon">💡</div>
-          <div className="info-content">
-            <strong>İpucu:</strong> 3D modeli döndürmek için fare ile sürükleyin. 
-            Yakınlaştırmak için mouse tekerleğini kullanın.
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

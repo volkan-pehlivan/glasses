@@ -66,14 +66,6 @@ function SummaryStep({ data, onRestart }) {
 
   return (
     <div className="wizard-step summary-step">
-      <div className="step-header success">
-        <span className="success-icon">✅</span>
-        <h2>Hesaplama Tamamlandı!</h2>
-        <p className="step-description">
-          İşte gözlük camınızın detayları
-        </p>
-      </div>
-
       <div className="step-content">
         {/* Summary cards */}
         <div className="summary-grid">

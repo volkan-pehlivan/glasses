@@ -1,10 +1,27 @@
-import React, { useRef, useMemo } from 'react'
-import { Canvas } from '@react-three/fiber'
+import React, { useRef, useMemo, useEffect } from 'react'
+import { Canvas, useThree } from '@react-three/fiber'
 import { OrbitControls, Environment, Grid } from '@react-three/drei'
 import * as THREE from 'three'
 import './LensSimulatorRounded.css'
 
-function AccurateLensGeometry({ centerThickness, edgeThickness, diameter, prescription, index, shape = 'classic' }) {
+function AccurateLensGeometry({ 
+  centerThickness, 
+  edgeThickness, 
+  diameter, 
+  prescription, 
+  index, 
+  shape = 'classic', 
+  transmission = 0.9, 
+  opacity = 0.85, 
+  reflection = 1.5, 
+  color = '#4a90e2',
+  roughness = 0.05,
+  metalness = 0.1,
+  clearcoat = 1.0,
+  clearcoatRoughness = 0.1,
+  thickness = 0.5,
+  ior = 1.5
+}) {
   const geometry = useMemo(() => {
     const width = diameter * 1.4
     const height = diameter * 0.9
@@ -153,14 +170,9 @@ function AccurateLensGeometry({ centerThickness, edgeThickness, diameter, prescr
       }
     }
     
-    const centerR = 0
-    const centerS1 = calculateSagitta(centerR, r1)
-    const centerS2 = calculateSagitta(centerR, r2)
-    positions.push(0, -centerS1, 0)
-    positions.push(0, -centerThickness - centerS2, 0)
-    
-    for (let ring = 1; ring <= radialRings; ring++) {
-      const ringRatio = ring / radialRings
+    // Start from a very small ring instead of a single center point to avoid artifacts
+    for (let ring = 0; ring <= radialRings; ring++) {
+      const ringRatio = ring === 0 ? 0.001 : ring / radialRings
       
       for (let i = 0; i < boundaryPoints; i++) {
         const t = i / boundaryPoints
@@ -178,17 +190,10 @@ function AccurateLensGeometry({ centerThickness, edgeThickness, diameter, prescr
       }
     }
     
-    for (let i = 0; i < boundaryPoints; i++) {
-      const next = (i + 1) % boundaryPoints
-      const current = 1 + i * 2
-      const nextVertex = 1 + next * 2
-      indices.push(0, current, nextVertex)
-      indices.push(1, nextVertex + 1, current + 1)
-    }
-    
-    for (let ring = 0; ring < radialRings - 1; ring++) {
-      const ringStart = 1 + ring * boundaryPoints * 2
-      const nextRingStart = 1 + (ring + 1) * boundaryPoints * 2
+    // Connect rings
+    for (let ring = 0; ring < radialRings; ring++) {
+      const ringStart = ring * boundaryPoints * 2
+      const nextRingStart = (ring + 1) * boundaryPoints * 2
       
       for (let i = 0; i < boundaryPoints; i++) {
         const next = (i + 1) % boundaryPoints
@@ -204,7 +209,8 @@ function AccurateLensGeometry({ centerThickness, edgeThickness, diameter, prescr
       }
     }
     
-    const outerRingStart = 1 + (radialRings - 1) * boundaryPoints * 2
+    // Close the outer edge
+    const outerRingStart = radialRings * boundaryPoints * 2
     for (let i = 0; i < boundaryPoints; i++) {
       const next = (i + 1) % boundaryPoints
       const c = outerRingStart + i * 2
@@ -224,24 +230,54 @@ function AccurateLensGeometry({ centerThickness, edgeThickness, diameter, prescr
   return (
     <mesh geometry={geometry} castShadow receiveShadow>
       <meshPhysicalMaterial
-        color="#4a90e2"
+        color={color}
         transparent={true}
-        opacity={0.85}
-        roughness={0.05}
-        metalness={0.1}
-        transmission={0.9}
-        thickness={0.5}
-        ior={1.5}
-        clearcoat={1.0}
-        clearcoatRoughness={0.1}
-        envMapIntensity={1.5}
+        opacity={opacity}
+        roughness={roughness}
+        metalness={metalness}
+        transmission={transmission}
+        thickness={thickness}
+        ior={ior}
+        clearcoat={clearcoat}
+        clearcoatRoughness={clearcoatRoughness}
+        envMapIntensity={reflection}
         side={THREE.DoubleSide}
       />
     </mesh>
   )
 }
 
-function LensModel({ params, controlsRef }) {
+function CameraController({ cameraView, controlsRef, viewTrigger }) {
+  const { camera } = useThree()
+  
+  useEffect(() => {
+    if (!camera || !controlsRef.current) return
+    
+    let targetPosition
+    // Note: Lenses are rotated 90° around X-axis, so we need to adjust camera positions
+    switch(cameraView) {
+      case 'top':
+        targetPosition = [0, 250, 0] // Looking from top (Y+) shows top view due to rotation
+        break
+      case 'front':
+        targetPosition = [0, 0, 250] // Looking from front (Z+) shows front view due to rotation
+        break
+      case 'side':
+        targetPosition = [250, 0, 0] // Looking from side (X+) shows side view
+        break
+      default:
+        targetPosition = [0, 0, 250]
+    }
+    
+    camera.position.set(...targetPosition)
+    controlsRef.current.target.set(0, 0, 0)
+    controlsRef.current.update()
+  }, [cameraView, viewTrigger, camera, controlsRef])
+  
+  return null
+}
+
+function LensModel({ params, controlsRef, showDebugLines }) {
   const groupRef = useRef(null)
   
   const calculateThickness = (prescription, index, diameter) => {
@@ -280,11 +316,54 @@ function LensModel({ params, controlsRef }) {
   
   const lensShape = params.lensShape || 'classic'
   
+  // Calculate lens spacing based on bridge width
+  const bridgeWidth = params.bridgeWidth || 17
+  const rightDiameter = showBoth ? params.rightDiameter : params.diameter
+  const leftDiameter = showBoth ? params.leftDiameter : params.diameter
+  
+  // Lens bounding box width is diameter * 1.4 (as defined in geometry)
+  const rightLensWidth = rightDiameter * 1.4
+  const leftLensWidth = leftDiameter * 1.4
+  
+  // Position lenses so the gap between bounding boxes equals bridgeWidth
+  // rightLensX + rightLensWidth/2 = right inner edge
+  // leftLensX - leftLensWidth/2 = left inner edge
+  // We want: (leftLensX - leftLensWidth/2) - (rightLensX + rightLensWidth/2) = bridgeWidth
+  // Since lenses are symmetric: rightLensX = -leftLensX
+  // So: (-rightLensX - leftLensWidth/2) - (rightLensX + rightLensWidth/2) = bridgeWidth
+  // Simplifying: -2*rightLensX - (leftLensWidth + rightLensWidth)/2 = bridgeWidth
+  // rightLensX = -((leftLensWidth + rightLensWidth)/2 + bridgeWidth) / 2
+  
+  const rightLensX = -((rightLensWidth + leftLensWidth) / 2 + bridgeWidth) / 2
+  const leftLensX = ((rightLensWidth + leftLensWidth) / 2 + bridgeWidth) / 2
+  
   return (
     <group ref={groupRef}>
+      {/* Reference dot at origin (0, 0, 0) - RED sphere */}
+      {showDebugLines && (
+        <mesh position={[0, 0, 0]}>
+          <sphereGeometry args={[3, 16, 16]} />
+          <meshBasicMaterial color="#ff0000" />
+        </mesh>
+      )}
+      
+      {/* Center markers for each lens - BLUE spheres */}
+      {showBoth && showDebugLines && (
+        <>
+          <mesh position={[rightLensX, 0, 0]}>
+            <sphereGeometry args={[3, 16, 16]} />
+            <meshBasicMaterial color="#0000ff" />
+          </mesh>
+          <mesh position={[leftLensX, 0, 0]}>
+            <sphereGeometry args={[3, 16, 16]} />
+            <meshBasicMaterial color="#0000ff" />
+          </mesh>
+        </>
+      )}
+      
       {showBoth ? (
         <>
-          <group position={[-params.rightDiameter * 1.1, rightYOffset, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <group position={[rightLensX, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
             <AccurateLensGeometry 
               centerThickness={rightThickness.center}
               edgeThickness={rightThickness.edge}
@@ -292,10 +371,20 @@ function LensModel({ params, controlsRef }) {
               prescription={params.rightPrescription}
               index={params.rightIndex}
               shape={lensShape}
+              transmission={params.lensTransmission || 0.9}
+              opacity={params.lensOpacity || 0.85}
+              reflection={params.lensReflection || 1.5}
+              color={params.lensColor || '#4a90e2'}
+              roughness={params.lensRoughness || 0.05}
+              metalness={params.lensMetalness || 0.1}
+              clearcoat={params.lensClearcoat || 1.0}
+              clearcoatRoughness={params.lensClearcoatRoughness || 0.1}
+              thickness={params.lensThickness || 0.5}
+              ior={params.lensIOR || 1.5}
             />
           </group>
           
-          <group position={[params.leftDiameter * 1.1, leftYOffset, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <group position={[leftLensX, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
             <AccurateLensGeometry 
               centerThickness={leftThickness.center}
               edgeThickness={leftThickness.edge}
@@ -303,8 +392,94 @@ function LensModel({ params, controlsRef }) {
               prescription={params.leftPrescription}
               index={params.leftIndex}
               shape={lensShape}
+              transmission={params.lensTransmission || 0.9}
+              opacity={params.lensOpacity || 0.85}
+              reflection={params.lensReflection || 1.5}
+              color={params.lensColor || '#4a90e2'}
+              roughness={params.lensRoughness || 0.05}
+              metalness={params.lensMetalness || 0.1}
+              clearcoat={params.lensClearcoat || 1.0}
+              clearcoatRoughness={params.lensClearcoatRoughness || 0.1}
+              thickness={params.lensThickness || 0.5}
+              ior={params.lensIOR || 1.5}
             />
           </group>
+          
+          {/* Bridge indicator - shows the actual gap between lenses */}
+          {showDebugLines && (
+            <mesh position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
+              <boxGeometry args={[bridgeWidth, rightDiameter * 0.9, 2]} />
+              <meshBasicMaterial color="#ff6b6b" transparent opacity={0.2} side={THREE.DoubleSide} />
+            </mesh>
+          )}
+          
+          {/* Blue line showing the gap between the inner edges of green boxes */}
+          {showDebugLines && (() => {
+            const rightInnerEdge = rightLensX + rightLensWidth / 2
+            const leftInnerEdge = leftLensX - leftLensWidth / 2
+            const gapLength = leftInnerEdge - rightInnerEdge
+            const gapCenter = (rightInnerEdge + leftInnerEdge) / 2
+            
+            // Log the values for debugging
+            console.log('Bridge Width Input:', bridgeWidth)
+            console.log('Right Lens X:', rightLensX)
+            console.log('Left Lens X:', leftLensX)
+            console.log('Right Lens Width:', rightLensWidth)
+            console.log('Left Lens Width:', leftLensWidth)
+            console.log('Right Inner Edge:', rightInnerEdge)
+            console.log('Left Inner Edge:', leftInnerEdge)
+            console.log('Gap Length (Blue Line):', gapLength)
+            console.log('---')
+            
+            return (
+              <mesh position={[gapCenter, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+                <boxGeometry args={[2, gapLength, 2]} />
+                <meshBasicMaterial color="#0000ff" transparent opacity={0.8} />
+              </mesh>
+            )
+          })()}
+          
+          {/* Full width indicators for each lens - shows the bounding box */}
+          {showDebugLines && (
+            <>
+              {/* Right lens full width box */}
+              <mesh position={[rightLensX, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                <boxGeometry args={[rightLensWidth, rightDiameter * 0.9, 0.5]} />
+                <meshBasicMaterial color="#00ff00" transparent opacity={0.15} wireframe />
+              </mesh>
+              
+              {/* Right lens center line (horizontal through green box center) */}
+              <mesh position={[rightLensX, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+                <boxGeometry args={[2, rightLensWidth, 2]} />
+                <meshBasicMaterial color="#00ff00" transparent opacity={0.8} />
+              </mesh>
+              
+              {/* Left lens full width box */}
+              <mesh position={[leftLensX, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                <boxGeometry args={[leftLensWidth, leftDiameter * 0.9, 0.5]} />
+                <meshBasicMaterial color="#00ff00" transparent opacity={0.15} wireframe />
+              </mesh>
+              
+              {/* Left lens center line (horizontal through green box center) */}
+              <mesh position={[leftLensX, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+                <boxGeometry args={[2, leftLensWidth, 2]} />
+                <meshBasicMaterial color="#00ff00" transparent opacity={0.8} />
+              </mesh>
+              
+              {/* Edge markers to show inner edges where gap starts */}
+              {/* Right lens inner edge (right side) */}
+              <mesh position={[rightLensX + rightLensWidth/2, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                <boxGeometry args={[2, rightDiameter * 0.9, 2]} />
+                <meshBasicMaterial color="#ffff00" transparent opacity={0.6} />
+              </mesh>
+              
+              {/* Left lens inner edge (left side) */}
+              <mesh position={[leftLensX - leftLensWidth/2, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                <boxGeometry args={[2, leftDiameter * 0.9, 2]} />
+                <meshBasicMaterial color="#ffff00" transparent opacity={0.6} />
+              </mesh>
+            </>
+          )}
         </>
       ) : (
         <group rotation={[Math.PI / 2, 0, 0]}>
@@ -315,6 +490,16 @@ function LensModel({ params, controlsRef }) {
             prescription={params.prescription}
             index={params.index}
             shape={lensShape}
+            transmission={params.lensTransmission || 0.9}
+            opacity={params.lensOpacity || 0.85}
+            reflection={params.lensReflection || 1.5}
+            color={params.lensColor || '#4a90e2'}
+            roughness={params.lensRoughness || 0.05}
+            metalness={params.lensMetalness || 0.1}
+            clearcoat={params.lensClearcoat || 1.0}
+            clearcoatRoughness={params.lensClearcoatRoughness || 0.1}
+            thickness={params.lensThickness || 0.5}
+            ior={params.lensIOR || 1.5}
           />
         </group>
       )}
@@ -322,13 +507,168 @@ function LensModel({ params, controlsRef }) {
   )
 }
 
-function LensSimulatorRounded({ params }) {
+function LensSimulatorRounded({ params, activeEye, onEyeChange, bridgeWidth, onBridgeWidthChange }) {
   const [controlMode] = React.useState('rotate')
   const [showGrid] = React.useState(false)
   const controlsRef = useRef(null)
+  const [cameraView, setCameraView] = React.useState('front')
+  const [viewTrigger, setViewTrigger] = React.useState(0)
+  const [isFullscreen, setIsFullscreen] = React.useState(false)
+  const [showDebugLines, setShowDebugLines] = React.useState(false)
+  const [showAxes, setShowAxes] = React.useState(false)
+  const containerRef = useRef(null)
+  
+  const backgroundEnvironment = params.backgroundEnvironment || 'city'
+  const backgroundColor = params.backgroundColor || 'default'
+  
+  const handleViewChange = (view) => {
+    setCameraView(view)
+    setViewTrigger(prev => prev + 1) // Force update even if same view
+  }
+  
+  const toggleFullscreen = () => {
+    if (!containerRef.current) return
+    
+    if (!isFullscreen) {
+      // Enter fullscreen
+      if (containerRef.current.requestFullscreen) {
+        containerRef.current.requestFullscreen()
+      } else if (containerRef.current.webkitRequestFullscreen) {
+        containerRef.current.webkitRequestFullscreen()
+      } else if (containerRef.current.msRequestFullscreen) {
+        containerRef.current.msRequestFullscreen()
+      }
+    } else {
+      // Exit fullscreen
+      if (document.exitFullscreen) {
+        document.exitFullscreen()
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen()
+      } else if (document.msExitFullscreen) {
+        document.msExitFullscreen()
+      }
+    }
+  }
+  
+  // Listen for fullscreen changes (e.g., user pressing ESC)
+  React.useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isCurrentlyFullscreen = !!(
+        document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        document.msFullscreenElement
+      )
+      setIsFullscreen(isCurrentlyFullscreen)
+      
+      // Force window resize event to make Three.js Canvas resize properly
+      setTimeout(() => {
+        window.dispatchEvent(new Event('resize'))
+      }, 100)
+    }
+    
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange)
+    document.addEventListener('msfullscreenchange', handleFullscreenChange)
+    
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange)
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange)
+      document.removeEventListener('msfullscreenchange', handleFullscreenChange)
+    }
+  }, [])
   
   return (
-    <div className="lens-simulator">
+    <div className="lens-simulator" ref={containerRef}>
+      {/* Eye Selection Buttons - Top Left */}
+      {onEyeChange && (
+        <div className="eye-selector-canvas">
+          <button 
+            className={`eye-canvas-btn ${activeEye === 'right' ? 'active' : ''}`}
+            onClick={() => onEyeChange('right')}
+            title="Sağ Göz"
+          >
+            Sağ
+          </button>
+          <button 
+            className={`eye-canvas-btn ${activeEye === 'both' ? 'active' : ''}`}
+            onClick={() => onEyeChange('both')}
+            title="Her İkisi"
+          >
+            İkisi
+          </button>
+          <button 
+            className={`eye-canvas-btn ${activeEye === 'left' ? 'active' : ''}`}
+            onClick={() => onEyeChange('left')}
+            title="Sol Göz"
+          >
+            Sol
+          </button>
+        </div>
+      )}
+      
+      {/* View Shortcut Buttons - Top Right */}
+      <div className="view-shortcuts">
+        <button 
+          className={`view-btn ${cameraView === 'top' ? 'active' : ''}`}
+          onClick={() => handleViewChange('top')}
+        >
+          Üst
+        </button>
+        <button 
+          className={`view-btn ${cameraView === 'front' ? 'active' : ''}`}
+          onClick={() => handleViewChange('front')}
+        >
+          Ön
+        </button>
+        <button 
+          className={`view-btn ${cameraView === 'side' ? 'active' : ''}`}
+          onClick={() => handleViewChange('side')}
+        >
+          Yan
+        </button>
+      </div>
+      
+      {/* Control Buttons - Bottom Right */}
+      <div className="fullscreen-control">
+        <button 
+          className="control-btn"
+          onClick={() => setShowAxes(!showAxes)}
+          title={showAxes ? 'Eksenleri Gizle' : 'Eksenleri Göster'}
+        >
+          {showAxes ? '📐' : '📏'}
+        </button>
+        <button 
+          className="control-btn"
+          onClick={() => setShowDebugLines(!showDebugLines)}
+          title={showDebugLines ? 'Kontrol Çizgilerini Gizle' : 'Kontrol Çizgilerini Göster'}
+        >
+          {showDebugLines ? '👁️' : '👁️‍🗨️'}
+        </button>
+        <button 
+          className="control-btn"
+          onClick={toggleFullscreen}
+          title={isFullscreen ? 'Tam Ekrandan Çık' : 'Tam Ekran'}
+        >
+          {isFullscreen ? '✕' : '⛶'}
+        </button>
+      </div>
+      
+      {/* Bridge Width Control - Bottom Left (when both eyes selected) */}
+      {activeEye === 'both' && onBridgeWidthChange && (
+        <div className="bridge-control-overlay">
+          <label>Köprü Genişliği</label>
+          <input
+            type="number"
+            value={bridgeWidth || 17}
+            onChange={(e) => onBridgeWidthChange(parseFloat(e.target.value) || 17)}
+            min="10"
+            max="30"
+            step="0.5"
+          />
+          <span className="unit">mm</span>
+        </div>
+      )}
+      
       <Canvas 
         shadows 
         gl={{ 
@@ -337,16 +677,23 @@ function LensSimulatorRounded({ params }) {
           powerPreference: "high-performance",
           precision: "highp",
           stencil: false,
-          depth: true,
-          useLegacyLights: false
+          depth: true
         }}
         dpr={[1, 2]}
+        camera={{ position: [0, 0, 250], fov: 50 }}
       >
-        <perspectiveCamera
-          makeDefault
-          position={[0, 0, 120]}
-          fov={50}
-        />
+        <color attach="background" args={
+          backgroundColor === 'custom' ? [params.customBackgroundColor || '#1a1a1a'] :
+          backgroundColor === 'white' ? ['#ffffff'] :
+          backgroundColor === 'black' ? ['#000000'] :
+          backgroundColor === 'gray' ? ['#808080'] :
+          backgroundColor === 'lightgray' ? ['#f0f0f0'] :
+          backgroundColor === 'lightblue' ? ['#87ceeb'] :
+          backgroundColor === 'cream' ? ['#f5f5dc'] :
+          ['#1a1a1a']
+        } />
+        
+        <CameraController cameraView={cameraView} controlsRef={controlsRef} viewTrigger={viewTrigger} />
         
         <ambientLight intensity={0.4} />
         <directionalLight 
@@ -356,7 +703,9 @@ function LensSimulatorRounded({ params }) {
         <directionalLight position={[-20, 20, -20]} intensity={0.8} />
         <pointLight position={[0, 50, 0]} intensity={0.5} />
         
-        <Environment preset="city" />
+        {(backgroundEnvironment === 'city' || backgroundEnvironment === 'sunset' || backgroundEnvironment === 'studio') && (
+          <Environment preset={backgroundEnvironment} />
+        )}
         
         {showGrid && (
           <Grid 
@@ -368,9 +717,9 @@ function LensSimulatorRounded({ params }) {
           />
         )}
         
-        <axesHelper args={[30]} />
+        {showAxes && <axesHelper args={[30]} />}
         
-        <LensModel params={params} controlsRef={controlsRef} />
+        <LensModel params={params} controlsRef={controlsRef} showDebugLines={showDebugLines} />
         
         <OrbitControls
           ref={controlsRef}
@@ -378,7 +727,7 @@ function LensSimulatorRounded({ params }) {
           enableZoom={true}
           enableRotate={controlMode === 'rotate' || controlMode === 'both'}
           minDistance={100}
-          maxDistance={300}
+          maxDistance={500}
           autoRotate={false}
           target={[0, 0, 0]}
           panSpeed={1.5}

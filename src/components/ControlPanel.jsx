@@ -149,10 +149,6 @@ function ControlPanel({ params, onUpdate }) {
             <span className="value">{thickness.min.toFixed(2)} mm</span>
           </div>
         </div>
-
-        <div className="info-box">
-          <p>💡 <strong>Not:</strong> Bu değerler kesildikten sonraki cam kalınlıklarını gösterir. Müşteriye gösterim için 1:1 ölçek kullanılmaktadır.</p>
-        </div>
       </div>
     </div>
   )

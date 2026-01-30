@@ -30,6 +30,7 @@ function LensWizard() {
     rightFrameSize: 'medium-large',
     leftDiameter: 70,
     leftFrameSize: 'medium-large',
+    bridgeWidth: 17, // Distance between lenses (DBL)
     
     // Material - separate for each eye
     rightIndex: 1.60,
@@ -37,6 +38,29 @@ function LensWizard() {
     
     // Shape
     lensShape: 'classic',
+    
+    // Background
+    backgroundEnvironment: 'city',
+    backgroundColor: 'default',
+    customBackgroundColor: '#1a1a1a',
+    
+    // Lens Material (Original classic values)
+    lensTransmission: 0.9,
+    lensOpacity: 0.85,
+    lensReflection: 1.5,
+    lensColor: '#4a90e2',
+    lensRoughness: 0.05,
+    lensMetalness: 0.1,
+    lensClearcoat: 1.0,
+    lensClearcoatRoughness: 0.1,
+    lensThickness: 0.5,
+    lensIOR: 1.5,
+    
+    // Pupillary Distance (PD)
+    totalPD: 63,
+    rightPD: 31.5,
+    leftPD: 31.5,
+    useSeparatePD: false,
     
     // Advanced (optional)
     edgeThickness: 1.5,
@@ -87,6 +111,24 @@ function LensWizard() {
       rightIndex: 1.60,
       leftIndex: 1.60,
       lensShape: 'classic',
+      backgroundEnvironment: 'city',
+      backgroundColor: 'default',
+      customBackgroundColor: '#1a1a1a',
+      lensTransmission: 0.9,
+      lensOpacity: 0.85,
+      lensReflection: 1.5,
+      lensColor: '#4a90e2',
+      lensRoughness: 0.05,
+      lensMetalness: 0.1,
+      lensClearcoat: 1.0,
+      lensClearcoatRoughness: 0.1,
+      lensThickness: 0.5,
+      lensIOR: 1.5,
+      bridgeWidth: 17,
+      totalPD: 63,
+      rightPD: 31.5,
+      leftPD: 31.5,
+      useSeparatePD: false,
       edgeThickness: 1.5,
       baseCurve: 4.0
     })

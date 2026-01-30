@@ -57,13 +57,6 @@ function MaterialStep({ data, onUpdate }) {
   
   return (
     <div className="wizard-step material-step">
-      <div className="step-header">
-        <h2>Cam Malzemesi Seçimi</h2>
-        <p className="step-description">
-          Her göz için ayrı malzeme seçebilirsiniz
-        </p>
-      </div>
-
       <div className="step-content">
         {/* Right Eye Materials */}
         <div className="eye-section">
@@ -154,15 +147,6 @@ function MaterialStep({ data, onUpdate }) {
                 </div>
               )
             })}
-          </div>
-        </div>
-
-        {/* Info box */}
-        <div className="info-box">
-          <div className="info-icon">💡</div>
-          <div className="info-content">
-            <strong>İpucu:</strong> Yüksek indeks değeri daha ince ve hafif cam demektir. 
-            Reçeteniz yüksekse, yüksek indeksli cam seçmek görünümü iyileştirir.
           </div>
         </div>
       </div>

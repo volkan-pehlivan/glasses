@@ -536,3 +536,120 @@
     justify-content: flex-start;
   }
 }
+
+/* PD (Pupillary Distance) Section */
+.pd-section {
+  background: white;
+  border: 2px solid #e1e8ed;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.pd-section h3 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+.pd-description {
+  margin: 0 0 20px 0;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.pd-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.pd-option {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pd-option label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #475569;
+  cursor: pointer;
+}
+
+.pd-option input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.pd-option > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-left: 26px;
+}
+
+.pd-input {
+  width: 100px;
+  padding: 10px 14px;
+  font-size: 16px;
+  font-weight: 500;
+  text-align: center;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  color: #1a202c;
+  background: #ffffff;
+  transition: all 0.2s;
+}
+
+.pd-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.pd-input:disabled {
+  background: #f1f5f9;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.pd-separate-inputs {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.pd-eye-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pd-eye-input label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+  min-width: 60px;
+}
+
+@media (max-width: 768px) {
+  .pd-section {
+    padding: 16px;
+  }
+  
+  .pd-separate-inputs {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .pd-option > div {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
