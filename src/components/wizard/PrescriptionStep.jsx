@@ -129,10 +129,6 @@ function PrescriptionStep({ data, onUpdate }) {
               </tr>
             </tbody>
           </table>
-
-          <button className="copy-button" onClick={copyToLeft}>
-            📋 Sağ göz değerlerini sol göze kopyala
-          </button>
         </div>
 
         {/* Pupillary Distance (PD) - HIDDEN FOR NOW, KEEP FOR FUTURE USE */}
@@ -212,7 +208,7 @@ function PrescriptionStep({ data, onUpdate }) {
 
         {/* Quick presets for common prescriptions */}
         <div className="quick-presets-section">
-          <h3>Hızlı Seçim (Sph)</h3>
+          <h3>Hızlı Seçim - Sağ Göz (Sph)</h3>
           <div className="preset-grid">
             {[-6, -5, -4, -3, -2, -1, -0.5, 0, 0.5, 1, 2, 3].map(value => (
               <button
@@ -220,8 +216,26 @@ function PrescriptionStep({ data, onUpdate }) {
                 className="preset-chip"
                 onClick={() => {
                   onUpdate({ 
-                    rightPrescription: value,
-                    leftPrescription: value 
+                    rightPrescription: value
+                  })
+                }}
+              >
+                {value > 0 ? `+${value}` : value}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="quick-presets-section">
+          <h3>Hızlı Seçim - Sol Göz (Sph)</h3>
+          <div className="preset-grid">
+            {[-6, -5, -4, -3, -2, -1, -0.5, 0, 0.5, 1, 2, 3].map(value => (
+              <button
+                key={value}
+                className="preset-chip"
+                onClick={() => {
+                  onUpdate({ 
+                    leftPrescription: value
                   })
                 }}
               >

@@ -81,17 +81,14 @@ function MaterialStep({ data, onUpdate }) {
                     </span>
                   </div>
 
-                  {/* Benefits */}
-                  <ul className="benefits-list">
-                    {material.benefits.map((benefit, i) => (
-                      <li key={i}>✓ {benefit}</li>
-                    ))}
-                  </ul>
-
-                  {/* Savings */}
-                  {savingsRight > 0 && (
+                  {/* Savings or Standard badge */}
+                  {savingsRight > 0 ? (
                     <div className="savings-badge">
                       %{savingsRight} daha ince
+                    </div>
+                  ) : (
+                    <div className="standard-badge">
+                      Standart
                     </div>
                   )}
 
@@ -127,17 +124,14 @@ function MaterialStep({ data, onUpdate }) {
                     </span>
                   </div>
 
-                  {/* Benefits */}
-                  <ul className="benefits-list">
-                    {material.benefits.map((benefit, i) => (
-                      <li key={i}>✓ {benefit}</li>
-                    ))}
-                  </ul>
-
-                  {/* Savings */}
-                  {savingsLeft > 0 && (
+                  {/* Savings or Standard badge */}
+                  {savingsLeft > 0 ? (
                     <div className="savings-badge">
                       %{savingsLeft} daha ince
+                    </div>
+                  ) : (
+                    <div className="standard-badge">
+                      Standart
                     </div>
                   )}
 

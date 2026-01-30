@@ -7,48 +7,55 @@ function ShapeStep({ data, onUpdate, onNext, onPrev }) {
   const shapes = [
     {
       id: 'classic',
-      name: 'Klasik Cam',
-      description: 'Üstte hafif köşeli, altta yuvarlak',
+      name: 'Klasik',
+      description: 'Üstte köşeli, altta yuvarlak',
       preview: (
-        <svg viewBox="0 0 140 90" className="shape-preview" preserveAspectRatio="xMidYMid meet">
-          {/* Width: 140 (1.4x), Height: 90 (0.9x) - matching diameter ratio */}
-          {/* Top corners: 5% radius, Bottom corners: 45% radius */}
-          <path 
-            d="M 4.5 0 
-               L 135.5 0 
-               Q 140 0 140 4.5 
-               L 140 49.5 
-               Q 140 90 99.5 90 
-               L 40.5 90 
-               Q 0 90 0 49.5 
-               L 0 4.5 
-               Q 0 0 4.5 0 Z" 
-            fill="#e0f2fe" 
-            stroke="#2563eb" 
-            strokeWidth="2"
-          />
+        <svg viewBox="-70 -45 140 90" className="shape-preview">
+          <path d="M -65,-45 L 65,-45 L 65,20 Q 65,45 40,45 L -40,45 Q -65,45 -65,20 L -65,-45 Z" 
+                fill="#dbeafe" stroke="#3b82f6" strokeWidth="2"/>
         </svg>
       )
     },
     {
       id: 'rectangle',
       name: 'Dikdörtgen',
-      description: 'Geniş dikdörtgen, tüm köşeler yuvarlatılmış',
+      description: 'Tüm köşeler yuvarlatılmış',
       preview: (
-        <svg viewBox="0 0 140 90" className="shape-preview" preserveAspectRatio="xMidYMid meet">
-          {/* Width: 140 (1.4x), Height: 90 (0.9x) - matching diameter ratio */}
-          {/* All corners: 25% radius */}
-          <rect 
-            x="0" 
-            y="0" 
-            width="140" 
-            height="90" 
-            rx="22.5" 
-            ry="22.5"
-            fill="#e0f2fe" 
-            stroke="#2563eb" 
-            strokeWidth="2"
-          />
+        <svg viewBox="-70 -45 140 90" className="shape-preview">
+          <rect x="-65" y="-40" width="130" height="80" rx="20" 
+                fill="#dbeafe" stroke="#3b82f6" strokeWidth="2"/>
+        </svg>
+      )
+    },
+    {
+      id: 'circle',
+      name: 'Yuvarlak',
+      description: 'Mükemmel daire',
+      preview: (
+        <svg viewBox="-50 -50 100 100" className="shape-preview">
+          <circle cx="0" cy="0" r="45" fill="#dbeafe" stroke="#3b82f6" strokeWidth="2"/>
+        </svg>
+      )
+    },
+    {
+      id: 'oval',
+      name: 'Oval',
+      description: 'Yatay elips',
+      preview: (
+        <svg viewBox="-70 -45 140 90" className="shape-preview">
+          <rect x="-65" y="-40" width="130" height="80" rx="40" ry="40" 
+                fill="#dbeafe" stroke="#3b82f6" strokeWidth="2"/>
+        </svg>
+      )
+    },
+    {
+      id: 'wayfarer',
+      name: 'Wayfarer',
+      description: 'Üstte geniş, altta dar',
+      preview: (
+        <svg viewBox="-75 -45 150 90" className="shape-preview">
+          <path d="M -70,-45 Q -75,-45 -75,-40 L -54,35 Q -54,40 -49,40 L 49,40 Q 54,40 54,35 L 75,-40 Q 75,-45 70,-45 Z" 
+                fill="#dbeafe" stroke="#3b82f6" strokeWidth="2"/>
         </svg>
       )
     }
@@ -85,19 +92,6 @@ function ShapeStep({ data, onUpdate, onNext, onPrev }) {
               )}
             </div>
           ))}
-        </div>
-
-        <div className="step-actions">
-          <button className="btn-secondary" onClick={onPrev}>
-            ← Geri
-          </button>
-          <button 
-            className="btn-primary" 
-            onClick={handleNext}
-            disabled={!selectedShape}
-          >
-            İleri →
-          </button>
         </div>
       </div>
     </div>

@@ -23,29 +23,60 @@ function AccurateLensGeometry({
   ior = 1.5
 }) {
   const geometry = useMemo(() => {
-    const width = diameter * 1.4
-    const height = diameter * 0.9
-    
-    const minDim = Math.min(width, height)
-    
-    // Define corner radii based on shape
-    let cornerRadii
-    if (shape === 'rectangle') {
-      // Rectangle: 25% radius on all corners
-      cornerRadii = {
-        topLeft: minDim * 0.25,
-        topRight: minDim * 0.25,
-        bottomRight: minDim * 0.25,
-        bottomLeft: minDim * 0.25
+    // Shape configurations with trapezoid support
+    const shapeConfigs = {
+      classic: {
+        topWidth: 1.4,
+        bottomWidth: 1.4,
+        height: 0.9,
+        cornerRadii: { topLeft: 0.05, topRight: 0.05, bottomLeft: 0.45, bottomRight: 0.45 }
+      },
+      rectangle: {
+        topWidth: 1.4,
+        bottomWidth: 1.4,
+        height: 0.9,
+        cornerRadii: { topLeft: 0.25, topRight: 0.25, bottomLeft: 0.25, bottomRight: 0.25 }
+      },
+      circle: {
+        topWidth: 1.0,
+        bottomWidth: 1.0,
+        height: 1.0,
+        cornerRadii: { topLeft: 0.5, topRight: 0.5, bottomLeft: 0.5, bottomRight: 0.5 }
+      },
+      oval: {
+        topWidth: 1.4,
+        bottomWidth: 1.4,
+        height: 0.9,
+        cornerRadii: { topLeft: 0.5, topRight: 0.5, bottomLeft: 0.5, bottomRight: 0.5 }
+      },
+      aviator: {
+        topWidth: 1.3,
+        bottomWidth: 1.5,
+        height: 0.9,
+        cornerRadii: { topLeft: 0.25, topRight: 0.25, bottomLeft: 0.15, bottomRight: 0.15 }
+      },
+      wayfarer: {
+        topWidth: 1.5,
+        bottomWidth: 1.3,
+        height: 0.9,
+        cornerRadii: { topLeft: 0.15, topRight: 0.15, bottomLeft: 0.25, bottomRight: 0.25 }
       }
-    } else {
-      // Classic: 5% top, 45% bottom
-      cornerRadii = {
-        topLeft: minDim * 0.05,
-        topRight: minDim * 0.05,
-        bottomRight: minDim * 0.45,
-        bottomLeft: minDim * 0.45
-      }
+    }
+    
+    const config = shapeConfigs[shape] || shapeConfigs.classic
+    
+    const topWidth = diameter * config.topWidth
+    const bottomWidth = diameter * config.bottomWidth
+    const height = diameter * config.height
+    
+    const minDim = Math.min(Math.max(topWidth, bottomWidth), height)
+    
+    // Scale corner radii by minDim
+    const cornerRadii = {
+      topLeft: minDim * config.cornerRadii.topLeft,
+      topRight: minDim * config.cornerRadii.topRight,
+      bottomLeft: minDim * config.cornerRadii.bottomLeft,
+      bottomRight: minDim * config.cornerRadii.bottomRight
     }
     
     const radialRings = 50
@@ -75,97 +106,120 @@ function AccurateLensGeometry({
       return R - Math.sqrt(R * R - r * r)
     }
     
-    const getRoundedRectPoint = (t) => {
-      const halfW = width / 2
+    const getRoundedTrapezoidPoint = (t) => {
+      const halfTopW = topWidth / 2
+      const halfBottomW = bottomWidth / 2
       const halfH = height / 2
       
-      const topLength = width - cornerRadii.topLeft - cornerRadii.topRight
-      const rightLength = height - cornerRadii.topRight - cornerRadii.bottomRight
-      const bottomLength = width - cornerRadii.bottomRight - cornerRadii.bottomLeft
-      const leftLength = height - cornerRadii.bottomLeft - cornerRadii.topLeft
+      // Calculate side lengths using Pythagorean theorem for angled sides
+      const widthDiff = Math.abs(halfTopW - halfBottomW)
+      const sideHeight = height - cornerRadii.topRight - cornerRadii.bottomRight
+      const rightSideLength = Math.sqrt(widthDiff * widthDiff + sideHeight * sideHeight)
+      const leftSideLength = rightSideLength // Symmetric
       
+      // Calculate straight edge lengths
+      const topLength = topWidth - cornerRadii.topLeft - cornerRadii.topRight
+      const bottomLength = bottomWidth - cornerRadii.bottomLeft - cornerRadii.bottomRight
+      
+      // Calculate corner arc lengths
       const topRightCornerLength = (Math.PI / 2) * cornerRadii.topRight
       const bottomRightCornerLength = (Math.PI / 2) * cornerRadii.bottomRight
       const bottomLeftCornerLength = (Math.PI / 2) * cornerRadii.bottomLeft
       const topLeftCornerLength = (Math.PI / 2) * cornerRadii.topLeft
       
-      const totalPerimeter = topLength + topRightCornerLength + rightLength + 
+      const totalPerimeter = topLength + topRightCornerLength + rightSideLength + 
                              bottomRightCornerLength + bottomLength + 
-                             bottomLeftCornerLength + leftLength + topLeftCornerLength
+                             bottomLeftCornerLength + leftSideLength + topLeftCornerLength
       
       const distance = t * totalPerimeter
       let accumulated = 0
       
+      // Top edge
       if (distance < accumulated + topLength) {
         const local = distance - accumulated
         return { 
-          x: -halfW + cornerRadii.topLeft + local, 
+          x: -halfTopW + cornerRadii.topLeft + local, 
           z: -halfH 
         }
       }
       accumulated += topLength
       
+      // Top-right corner
       if (distance < accumulated + topRightCornerLength) {
         const local = (distance - accumulated) / topRightCornerLength
         const angle = -Math.PI / 2 + local * (Math.PI / 2)
         return { 
-          x: halfW - cornerRadii.topRight + cornerRadii.topRight * Math.cos(angle), 
+          x: halfTopW - cornerRadii.topRight + cornerRadii.topRight * Math.cos(angle), 
           z: -halfH + cornerRadii.topRight + cornerRadii.topRight * Math.sin(angle) 
         }
       }
       accumulated += topRightCornerLength
       
-      if (distance < accumulated + rightLength) {
-        const local = distance - accumulated
+      // Right side (angled for trapezoid)
+      if (distance < accumulated + rightSideLength) {
+        const local = (distance - accumulated) / rightSideLength
+        const startX = halfTopW
+        const endX = halfBottomW
+        const startZ = -halfH + cornerRadii.topRight
+        const endZ = halfH - cornerRadii.bottomRight
         return { 
-          x: halfW, 
-          z: -halfH + cornerRadii.topRight + local 
+          x: startX + (endX - startX) * local, 
+          z: startZ + (endZ - startZ) * local 
         }
       }
-      accumulated += rightLength
+      accumulated += rightSideLength
       
+      // Bottom-right corner
       if (distance < accumulated + bottomRightCornerLength) {
         const local = (distance - accumulated) / bottomRightCornerLength
         const angle = 0 + local * (Math.PI / 2)
         return { 
-          x: halfW - cornerRadii.bottomRight + cornerRadii.bottomRight * Math.cos(angle), 
+          x: halfBottomW - cornerRadii.bottomRight + cornerRadii.bottomRight * Math.cos(angle), 
           z: halfH - cornerRadii.bottomRight + cornerRadii.bottomRight * Math.sin(angle) 
         }
       }
       accumulated += bottomRightCornerLength
       
+      // Bottom edge
       if (distance < accumulated + bottomLength) {
         const local = distance - accumulated
         return { 
-          x: halfW - cornerRadii.bottomRight - local, 
+          x: halfBottomW - cornerRadii.bottomRight - local, 
           z: halfH 
         }
       }
       accumulated += bottomLength
       
+      // Bottom-left corner
       if (distance < accumulated + bottomLeftCornerLength) {
         const local = (distance - accumulated) / bottomLeftCornerLength
         const angle = Math.PI / 2 + local * (Math.PI / 2)
         return { 
-          x: -halfW + cornerRadii.bottomLeft + cornerRadii.bottomLeft * Math.cos(angle), 
+          x: -halfBottomW + cornerRadii.bottomLeft + cornerRadii.bottomLeft * Math.cos(angle), 
           z: halfH - cornerRadii.bottomLeft + cornerRadii.bottomLeft * Math.sin(angle) 
         }
       }
       accumulated += bottomLeftCornerLength
       
-      if (distance < accumulated + leftLength) {
-        const local = distance - accumulated
+      // Left side (angled for trapezoid)
+      if (distance < accumulated + leftSideLength) {
+        const local = (distance - accumulated) / leftSideLength
+        const startX = -halfBottomW
+        const endX = -halfTopW
+        const startZ = halfH - cornerRadii.bottomLeft
+        const endZ = -halfH + cornerRadii.topLeft
         return { 
-          x: -halfW, 
-          z: halfH - cornerRadii.bottomLeft - local 
+          x: startX + (endX - startX) * local, 
+          z: startZ + (endZ - startZ) * local 
         }
       }
-      accumulated += leftLength
+      accumulated += leftSideLength
       
+      // Top-left corner
       const local = (distance - accumulated) / topLeftCornerLength
       const angle = Math.PI + local * (Math.PI / 2)
       return { 
-        x: -halfW + cornerRadii.topLeft + cornerRadii.topLeft * Math.cos(angle), 
+        x: -halfTopW + cornerRadii.topLeft + cornerRadii.topLeft * Math.cos(angle), 
         z: -halfH + cornerRadii.topLeft + cornerRadii.topLeft * Math.sin(angle) 
       }
     }
@@ -176,7 +230,7 @@ function AccurateLensGeometry({
       
       for (let i = 0; i < boundaryPoints; i++) {
         const t = i / boundaryPoints
-        const boundaryPt = getRoundedRectPoint(t)
+        const boundaryPt = getRoundedTrapezoidPoint(t)
         const x = boundaryPt.x * ringRatio
         const z = boundaryPt.z * ringRatio
         const r = Math.sqrt(x * x + z * z)

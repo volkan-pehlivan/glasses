@@ -3,10 +3,14 @@
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
   margin-bottom: 24px;
+  max-width: 50%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .eye-section {
   margin-bottom: 32px;
+  margin-top: 24px;
 }
 
 .eye-section-title {
@@ -15,7 +19,7 @@
   color: #1a202c;
   margin-bottom: 16px;
   padding-bottom: 8px;
-  border-bottom: 2px solid #e1e8ed;
+  text-align: center;
 }
 
 .thickness-display {
@@ -124,6 +128,16 @@
 .savings-badge {
   background: #d1fae5;
   color: #059669;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+  text-align: center;
+  font-size: 12px;
+}
+
+.standard-badge {
+  background: #f1f5f9;
+  color: #64748b;
   padding: 6px 10px;
   border-radius: 6px;
   font-weight: 600;
