@@ -37,14 +37,14 @@ function LensWizard() {
     lensShape: 'classic',
     
     // Background
-    backgroundEnvironment: 'city',
+    backgroundEnvironment: 'photostudio',
     backgroundColor: 'default',
     customBackgroundColor: '#1a1a1a',
     
     // Lens Material (Optimized for realistic glass with better transparency)
     lensTransmission: 1.0,
     lensOpacity: 1.0,
-    lensReflection: 0.5,
+    lensReflection: 0.2,
     lensColor: '#ffffff',
     lensRoughness: 0.05,
     lensMetalness: 0.0,
@@ -105,12 +105,12 @@ function LensWizard() {
       rightIndex: 1.60,
       leftIndex: 1.60,
       lensShape: 'classic',
-      backgroundEnvironment: 'city',
+      backgroundEnvironment: 'photostudio',
       backgroundColor: 'default',
       customBackgroundColor: '#1a1a1a',
       lensTransmission: 1.0,
       lensOpacity: 1.0,
-      lensReflection: 0.5,
+      lensReflection: 0.1,
       lensColor: '#ffffff',
       lensRoughness: 0.05,
       lensMetalness: 0.0,

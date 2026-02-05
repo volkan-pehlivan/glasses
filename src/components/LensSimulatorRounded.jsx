@@ -587,6 +587,7 @@ function LensSimulatorRounded({
   const [isFullscreen, setIsFullscreen] = React.useState(false)
   const [showDebugLines, setShowDebugLines] = React.useState(false)
   const [showAxes, setShowAxes] = React.useState(false)
+  const [envRotation, setEnvRotation] = React.useState(0)
   const containerRef = useRef(null)
   
   const backgroundEnvironment = params.backgroundEnvironment || 'city'
@@ -698,6 +699,22 @@ function LensSimulatorRounded({
           Yan
         </button>
       </div>
+      
+      {/* Environment Rotation Control - Below View Shortcuts */}
+      {backgroundEnvironment !== 'none' && (
+        <div className="env-rotation-control">
+          <label>🔄 Ortam Döndür</label>
+          <input
+            type="range"
+            min="0"
+            max={Math.PI * 2}
+            step="0.1"
+            value={envRotation}
+            onChange={(e) => setEnvRotation(parseFloat(e.target.value))}
+            className="env-rotation-slider"
+          />
+        </div>
+      )}
       
       {/* Edit Eye Selector - Center Top (only when both eyes view is active) */}
       {activeEye === 'both' && onPrescriptionEyeChange && (
@@ -932,12 +949,14 @@ function LensSimulatorRounded({
           castShadow
         />
         
-        {/* Environment with background */}
+        {/* Environment with background - with rotation control */}
         {backgroundEnvironment === 'city' && (
           <Environment 
             preset="city" 
             background={true}
             blur={0}
+            backgroundRotation={[0, envRotation, 0]}
+            environmentRotation={[0, envRotation, 0]}
           />
         )}
         {backgroundEnvironment === 'sunset' && (
@@ -945,6 +964,8 @@ function LensSimulatorRounded({
             preset="sunset" 
             background={true}
             blur={0}
+            backgroundRotation={[0, envRotation, 0]}
+            environmentRotation={[0, envRotation, 0]}
           />
         )}
         {backgroundEnvironment === 'studio' && (
@@ -952,6 +973,8 @@ function LensSimulatorRounded({
             preset="studio" 
             background={true}
             blur={0}
+            backgroundRotation={[0, envRotation, 0]}
+            environmentRotation={[0, envRotation, 0]}
           />
         )}
         {backgroundEnvironment === 'apartment' && (
@@ -959,6 +982,8 @@ function LensSimulatorRounded({
             files="/hdri/small_empty_room_3_4k.hdr"
             background={true}
             blur={0}
+            backgroundRotation={[0, envRotation, 0]}
+            environmentRotation={[0, envRotation, 0]}
           />
         )}
         {backgroundEnvironment === 'room' && (
@@ -966,6 +991,8 @@ function LensSimulatorRounded({
             files="/hdri/small_empty_room_3_4k.hdr"
             background={true}
             blur={0}
+            backgroundRotation={[0, envRotation, 0]}
+            environmentRotation={[0, envRotation, 0]}
           />
         )}
         {backgroundEnvironment === 'wooden' && (
@@ -973,6 +1000,17 @@ function LensSimulatorRounded({
             files="/hdri/university_workshop_4k.hdr"
             background={true}
             blur={0}
+            backgroundRotation={[0, envRotation, 0]}
+            environmentRotation={[0, envRotation, 0]}
+          />
+        )}
+        {backgroundEnvironment === 'photostudio' && (
+          <Environment 
+            files="/hdri/brown_photostudio_02_4k.hdr"
+            background={true}
+            blur={0}
+            backgroundRotation={[0, envRotation, 0]}
+            environmentRotation={[0, envRotation, 0]}
           />
         )}
         

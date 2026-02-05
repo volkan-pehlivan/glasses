@@ -203,6 +203,7 @@ function PreviewStep({ data, onUpdate }) {
                       onChange={(e) => onUpdate({ backgroundEnvironment: e.target.value })}
                       className="appearance-select"
                     >
+                      <option value="photostudio">Fotoğraf Stüdyosu (HD)</option>
                       <option value="wooden">Ahşap Stüdyo (HD)</option>
                       <option value="apartment">Daire (HD)</option>
                       <option value="room">Oda (HD)</option>
