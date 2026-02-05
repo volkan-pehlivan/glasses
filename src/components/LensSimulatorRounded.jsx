@@ -892,34 +892,88 @@ function LensSimulatorRounded({
           powerPreference: "high-performance",
           precision: "highp",
           stencil: false,
-          depth: true
+          depth: true,
+          toneMapping: THREE.ACESFilmicToneMapping,
+          toneMappingExposure: 1.0
         }}
         dpr={[1, 2]}
         camera={{ position: [0, 0, 250], fov: 50 }}
       >
-        <color attach="background" args={
-          backgroundColor === 'custom' ? [params.customBackgroundColor || '#1a1a1a'] :
-          backgroundColor === 'white' ? ['#ffffff'] :
-          backgroundColor === 'black' ? ['#000000'] :
-          backgroundColor === 'gray' ? ['#808080'] :
-          backgroundColor === 'lightgray' ? ['#f0f0f0'] :
-          backgroundColor === 'lightblue' ? ['#87ceeb'] :
-          backgroundColor === 'cream' ? ['#f5f5dc'] :
-          ['#1a1a1a']
-        } />
+        {/* Only set solid background color if no environment is active */}
+        {backgroundEnvironment === 'none' && (
+          <color attach="background" args={
+            backgroundColor === 'custom' ? [params.customBackgroundColor || '#1a1a1a'] :
+            backgroundColor === 'white' ? ['#ffffff'] :
+            backgroundColor === 'black' ? ['#000000'] :
+            backgroundColor === 'gray' ? ['#808080'] :
+            backgroundColor === 'lightgray' ? ['#f0f0f0'] :
+            backgroundColor === 'lightblue' ? ['#87ceeb'] :
+            backgroundColor === 'cream' ? ['#f5f5dc'] :
+            ['#1a1a1a']
+          } />
+        )}
         
         <CameraController cameraView={cameraView} controlsRef={controlsRef} viewTrigger={viewTrigger} />
         
-        <ambientLight intensity={0.4} />
+        {/* Improved lighting setup for realistic glass */}
+        <ambientLight intensity={0.3} />
         <directionalLight 
-          position={[20, 30, 20]} 
-          intensity={1.5}
+          position={[10, 10, 5]} 
+          intensity={1.0}
+          castShadow
         />
-        <directionalLight position={[-20, 20, -20]} intensity={0.8} />
-        <pointLight position={[0, 50, 0]} intensity={0.5} />
+        <directionalLight position={[-10, 10, -5]} intensity={0.5} />
+        <pointLight position={[0, 20, 10]} intensity={0.8} />
+        <spotLight 
+          position={[0, 30, 0]} 
+          angle={0.3} 
+          penumbra={1} 
+          intensity={0.5}
+          castShadow
+        />
         
-        {(backgroundEnvironment === 'city' || backgroundEnvironment === 'sunset' || backgroundEnvironment === 'studio') && (
-          <Environment preset={backgroundEnvironment} />
+        {/* Environment with background */}
+        {backgroundEnvironment === 'city' && (
+          <Environment 
+            preset="city" 
+            background={true}
+            blur={0}
+          />
+        )}
+        {backgroundEnvironment === 'sunset' && (
+          <Environment 
+            preset="sunset" 
+            background={true}
+            blur={0}
+          />
+        )}
+        {backgroundEnvironment === 'studio' && (
+          <Environment 
+            preset="studio" 
+            background={true}
+            blur={0}
+          />
+        )}
+        {backgroundEnvironment === 'apartment' && (
+          <Environment 
+            files="/hdri/small_empty_room_3_4k.hdr"
+            background={true}
+            blur={0}
+          />
+        )}
+        {backgroundEnvironment === 'room' && (
+          <Environment 
+            files="/hdri/small_empty_room_3_4k.hdr"
+            background={true}
+            blur={0}
+          />
+        )}
+        {backgroundEnvironment === 'wooden' && (
+          <Environment 
+            files="/hdri/university_workshop_4k.hdr"
+            background={true}
+            blur={0}
+          />
         )}
         
         {showGrid && (
