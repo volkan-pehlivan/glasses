@@ -1,8 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react'
 import { WizardControlsContext } from '../App'
-import PrescriptionStep from './wizard/PrescriptionStep'
-import FrameStep from './wizard/FrameStep'
-import MaterialStep from './wizard/MaterialStep'
 import ShapeStep from './wizard/ShapeStep'
 import PreviewStep from './wizard/PreviewStep'
 import SummaryStep from './wizard/SummaryStep'
@@ -68,12 +65,9 @@ function LensWizard() {
   })
 
   const steps = [
-    { id: 1, label: 'Reçete', icon: '📋' },
-    { id: 2, label: 'Çerçeve', icon: '👓' },
-    { id: 3, label: 'Malzeme', icon: '🔬' },
-    { id: 4, label: 'Şekil', icon: '⭕' },
-    { id: 5, label: 'Önizleme', icon: '👁️' },
-    { id: 6, label: 'Sonuç', icon: '✅' }
+    { id: 1, label: 'Şekil', icon: '⭕' },
+    { id: 2, label: 'Önizleme', icon: '👁️' },
+    { id: 3, label: 'Sonuç', icon: '✅' }
   ]
 
   const updateData = (newData) => {
@@ -160,19 +154,13 @@ function LensWizard() {
 
     switch (currentStep) {
       case 1:
-        return <PrescriptionStep {...stepProps} />
-      case 2:
-        return <FrameStep {...stepProps} />
-      case 3:
-        return <MaterialStep {...stepProps} />
-      case 4:
         return <ShapeStep {...stepProps} />
-      case 5:
+      case 2:
         return <PreviewStep {...stepProps} />
-      case 6:
+      case 3:
         return <SummaryStep {...stepProps} />
       default:
-        return <PrescriptionStep {...stepProps} />
+        return <ShapeStep {...stepProps} />
     }
   }
 

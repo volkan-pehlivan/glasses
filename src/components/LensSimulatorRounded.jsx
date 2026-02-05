@@ -561,7 +561,24 @@ function LensModel({ params, controlsRef, showDebugLines }) {
   )
 }
 
-function LensSimulatorRounded({ params, activeEye, onEyeChange, bridgeWidth, onBridgeWidthChange }) {
+function LensSimulatorRounded({ 
+  params, 
+  activeEye, 
+  onEyeChange, 
+  bridgeWidth, 
+  onBridgeWidthChange, 
+  prescriptionEye, 
+  onPrescriptionEyeChange,
+  rightDiameter,
+  leftDiameter,
+  onDiameterChange,
+  rightPrescription,
+  leftPrescription,
+  onPrescriptionChange,
+  rightIndex,
+  leftIndex,
+  onIndexChange
+}) {
   const [controlMode] = React.useState('rotate')
   const [showGrid] = React.useState(false)
   const controlsRef = useRef(null)
@@ -682,6 +699,24 @@ function LensSimulatorRounded({ params, activeEye, onEyeChange, bridgeWidth, onB
         </button>
       </div>
       
+      {/* Edit Eye Selector - Center Top (only when both eyes view is active) */}
+      {activeEye === 'both' && onPrescriptionEyeChange && (
+        <div className="eye-selector-center">
+          <button 
+            className={`eye-center-btn ${prescriptionEye === 'right' ? 'active' : ''}`}
+            onClick={() => onPrescriptionEyeChange('right')}
+          >
+            Sağ
+          </button>
+          <button 
+            className={`eye-center-btn ${prescriptionEye === 'left' ? 'active' : ''}`}
+            onClick={() => onPrescriptionEyeChange('left')}
+          >
+            Sol
+          </button>
+        </div>
+      )}
+      
       {/* Control Buttons - Bottom Right */}
       <div className="fullscreen-control">
         <button 
@@ -709,17 +744,143 @@ function LensSimulatorRounded({ params, activeEye, onEyeChange, bridgeWidth, onB
       
       {/* Bridge Width Control - Bottom Left (when both eyes selected) */}
       {activeEye === 'both' && onBridgeWidthChange && (
-        <div className="bridge-control-overlay">
-          <label>Köprü Genişliği</label>
-          <input
-            type="number"
-            value={bridgeWidth || 17}
-            onChange={(e) => onBridgeWidthChange(parseFloat(e.target.value) || 17)}
-            min="10"
-            max="30"
-            step="0.5"
-          />
-          <span className="unit">mm</span>
+        <div className="bridge-width-overlay">
+          <label>🔗 Köprü Genişliği</label>
+          <div className="control-input-group">
+            <input
+              type="number"
+              min="10"
+              max="30"
+              step="0.5"
+              value={bridgeWidth || 17}
+              onChange={(e) => onBridgeWidthChange(parseFloat(e.target.value) || 17)}
+            />
+            <span className="unit">mm</span>
+          </div>
+        </div>
+      )}
+      
+      {/* Frame Diameter Control - Below Bridge Width */}
+      {onDiameterChange && (
+        <div className="frame-diameter-overlay">
+          {/* Show diameter control based on view mode and edit selection */}
+          {(activeEye === 'right' || (activeEye === 'both' && prescriptionEye === 'right')) && (
+            <>
+              <label>👁️ Sağ Göz Çap</label>
+              <div className="control-input-group">
+                <input
+                  type="number"
+                  min="50"
+                  max="85"
+                  step="1"
+                  value={rightDiameter}
+                  onChange={(e) => onDiameterChange('right', e.target.value)}
+                />
+                <span className="unit">mm</span>
+              </div>
+            </>
+          )}
+          
+          {(activeEye === 'left' || (activeEye === 'both' && prescriptionEye === 'left')) && (
+            <>
+              <label>👁️ Sol Göz Çap</label>
+              <div className="control-input-group">
+                <input
+                  type="number"
+                  min="50"
+                  max="85"
+                  step="1"
+                  value={leftDiameter}
+                  onChange={(e) => onDiameterChange('left', e.target.value)}
+                />
+                <span className="unit">mm</span>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+      
+      {/* Prescription Slider - Bottom Center */}
+      {onPrescriptionChange && (
+        <div className="prescription-slider-overlay">
+          <div className="slider-container">
+            <div className="slider-wrapper">
+              <input
+                type="range"
+                min="-10"
+                max="10"
+                step="0.25"
+                value={activeEye === 'both' 
+                  ? (prescriptionEye === 'right' ? rightPrescription : leftPrescription)
+                  : (activeEye === 'right' ? rightPrescription : leftPrescription)
+                }
+                onChange={(e) => onPrescriptionChange(parseFloat(e.target.value))}
+                className="prescription-slider"
+              />
+              <div className="slider-ticks">
+                {[-10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(val => (
+                  <span key={val} className="tick">
+                    {val > 0 ? `+${val}` : val}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <span className="slider-value">
+              {(() => {
+                const value = activeEye === 'both' 
+                  ? (prescriptionEye === 'right' ? rightPrescription : leftPrescription)
+                  : (activeEye === 'right' ? rightPrescription : leftPrescription);
+                return `${value > 0 ? '+' : ''}${value.toFixed(2)} D`;
+              })()}
+            </span>
+          </div>
+        </div>
+      )}
+      
+      {/* Material Index Slider - Right Middle (Vertical) */}
+      {onIndexChange && (
+        <div className="material-slider-overlay">
+          <div className="material-slider-wrapper">
+            <div className="material-slider-ticks">
+              <span className="material-tick">1.50</span>
+              <span className="material-tick">1.60</span>
+              <span className="material-tick">1.67</span>
+              <span className="material-tick">1.74</span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="3"
+              step="1"
+              value={(() => {
+                const currentIndex = activeEye === 'both' 
+                  ? (prescriptionEye === 'right' ? rightIndex : leftIndex)
+                  : (activeEye === 'right' ? rightIndex : leftIndex);
+                const indices = [1.50, 1.60, 1.67, 1.74];
+                // Find closest index
+                let closestIdx = 0;
+                let minDiff = Math.abs(currentIndex - indices[0]);
+                for (let i = 1; i < indices.length; i++) {
+                  const diff = Math.abs(currentIndex - indices[i]);
+                  if (diff < minDiff) {
+                    minDiff = diff;
+                    closestIdx = i;
+                  }
+                }
+                return 3 - closestIdx; // Reverse for vertical orientation
+              })()}
+              onChange={(e) => {
+                const indices = [1.50, 1.60, 1.67, 1.74];
+                const value = indices[3 - parseInt(e.target.value)]; // Reverse for vertical orientation
+                if (activeEye === 'both') {
+                  onIndexChange(prescriptionEye, value);
+                } else {
+                  onIndexChange(activeEye, value);
+                }
+              }}
+              className="material-slider-vertical"
+            />
+          </div>
         </div>
       )}
       

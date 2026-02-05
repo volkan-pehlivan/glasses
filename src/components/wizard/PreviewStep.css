@@ -1,6 +1,7 @@
 .preview-step {
   max-width: 100%;
   margin: 0;
+  position: relative;
 }
 
 .preview-step .step-content {
@@ -198,6 +199,69 @@
 .bridge-control-overlay .unit {
   font-size: 13px;
   color: white;
+  font-weight: 500;
+}
+
+/* Frame Controls Overlay - Bottom Left of Canvas */
+.frame-controls-overlay {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  z-index: 10;
+  min-width: 200px;
+}
+
+.frame-control-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.frame-control-item label {
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  margin: 0;
+}
+
+.control-input-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+
+.control-input-group input {
+  flex: 1;
+  padding: 6px 8px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+  min-width: 60px;
+}
+
+.control-input-group input:focus {
+  outline: none;
+  border-color: rgba(37, 99, 235, 0.8);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.control-input-group .unit {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
   font-weight: 500;
 }
 
@@ -746,4 +810,166 @@
   color: #64748b;
   font-weight: 600;
   text-align: right;
+}
+
+/* Prescription Slider Overlay - Bottom of Canvas */
+.prescription-slider-overlay {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  z-index: 10;
+  min-width: 600px;
+}
+
+.eye-selector-radio {
+  display: flex;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 3px;
+  border-radius: 6px;
+}
+
+.eye-selector-radio label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  min-width: 50px;
+}
+
+.eye-selector-radio label:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.eye-selector-radio label.active {
+  background: rgba(37, 99, 235, 0.9);
+  color: white;
+}
+
+.eye-selector-radio input[type="radio"] {
+  display: none;
+}
+
+.slider-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.slider-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+}
+
+.prescription-slider {
+  width: 100%;
+  height: 12px;
+  border-radius: 6px;
+  background: rgba(128, 128, 128, 0.6);
+  outline: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+.prescription-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: white;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  transition: all 0.2s;
+}
+
+.prescription-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+.prescription-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: white;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  transition: all 0.2s;
+}
+
+.prescription-slider::-moz-range-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+.slider-ticks {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 2px;
+}
+
+.slider-ticks .tick {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
+  min-width: 20px;
+}
+
+.slider-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: white;
+  min-width: 90px;
+  text-align: center;
+  font-family: monospace;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 6px 12px;
+  border-radius: 6px;
+}
+
+@media (max-width: 768px) {
+  .prescription-slider-overlay {
+    min-width: 90%;
+    padding: 12px 16px;
+  }
+  
+  .slider-container {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .slider-value {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .slider-ticks .tick {
+    font-size: 9px;
+    min-width: 15px;
+  }
 }

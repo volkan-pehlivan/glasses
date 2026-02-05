@@ -5,7 +5,8 @@ import './PreviewStep.css'
 
 function PreviewStep({ data, onUpdate }) {
   const [useRounded, setUseRounded] = useState(true) // Always use rounded
-  const [activeEye, setActiveEye] = useState('both') // 'right', 'left', or 'both'
+  const [activeEye, setActiveEye] = useState('both') // 'right', 'left', or 'both' - controls VIEW
+  const [prescriptionEye, setPrescriptionEye] = useState('right') // Which eye's data to EDIT when both view is active
   const [openAccordion, setOpenAccordion] = useState(null) // 'colors', 'materials', 'measurements', or null (all closed by default)
   
   // Calculate thickness for a specific eye
@@ -36,6 +37,23 @@ function PreviewStep({ data, onUpdate }) {
   const leftThickness = calculateThickness(data.leftPrescription, data.leftIndex, data.leftDiameter)
 
   const SimulatorComponent = useRounded ? LensSimulatorRounded : LensSimulator
+  
+  // Handle prescription change
+  const handlePrescriptionChange = (value) => {
+    const newValue = parseFloat(value)
+    if (activeEye === 'both') {
+      // Update based on which eye is selected in toggle
+      if (prescriptionEye === 'right') {
+        onUpdate({ rightPrescription: newValue })
+      } else {
+        onUpdate({ leftPrescription: newValue })
+      }
+    } else if (activeEye === 'right') {
+      onUpdate({ rightPrescription: newValue })
+    } else {
+      onUpdate({ leftPrescription: newValue })
+    }
+  }
 
   return (
     <div className="wizard-step preview-step">
@@ -74,8 +92,31 @@ function PreviewStep({ data, onUpdate }) {
               }}
               activeEye={activeEye}
               onEyeChange={setActiveEye}
+              prescriptionEye={prescriptionEye}
+              onPrescriptionEyeChange={setPrescriptionEye}
               bridgeWidth={data.bridgeWidth || 17}
               onBridgeWidthChange={(value) => onUpdate({ bridgeWidth: value })}
+              rightDiameter={data.rightDiameter}
+              leftDiameter={data.leftDiameter}
+              onDiameterChange={(eye, value) => {
+                if (eye === 'right') {
+                  onUpdate({ rightDiameter: parseInt(value) || 50 })
+                } else {
+                  onUpdate({ leftDiameter: parseInt(value) || 50 })
+                }
+              }}
+              rightPrescription={data.rightPrescription}
+              leftPrescription={data.leftPrescription}
+              onPrescriptionChange={handlePrescriptionChange}
+              rightIndex={data.rightIndex}
+              leftIndex={data.leftIndex}
+              onIndexChange={(eye, value) => {
+                if (eye === 'right') {
+                  onUpdate({ rightIndex: parseFloat(value) })
+                } else {
+                  onUpdate({ leftIndex: parseFloat(value) })
+                }
+              }}
             />
           </div>
 
