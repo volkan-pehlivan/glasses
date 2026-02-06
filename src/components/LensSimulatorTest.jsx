@@ -19,6 +19,9 @@ import './LensSimulator.css'
 
 function AccurateLensGeometry({ centerThickness, edgeThickness, diameter, prescription, index }) {
   const geometry = useMemo(() => {
+    // Simple: just show half the prescription for visual appeal
+    const visualPrescription = prescription * 0.5;
+    
     // Use diameter as the width/height of rectangular lens
     const width = diameter
     const height = diameter * 0.6 // Make it rectangular (not square)
@@ -30,16 +33,28 @@ function AccurateLensGeometry({ centerThickness, edgeThickness, diameter, prescr
     // PROFESSIONAL ALGORITHM - Based on optical engineering standards
     
     // Step 1: Calculate Spherical Equivalent (for simple spherical lens, SE = prescription)
-    const SE = prescription // For spherical lenses without cylinder
+    const SE = visualPrescription // Use visual prescription for base curve
     
     // Step 2: Vogel's Rule for Base Curve (Front Surface)
     let baseCurve
     if (prescription < 0) {
-      // Myopic: BC = SE/2 + 6.00
-      baseCurve = SE / 2 + 6.00
+      // Minus lenses: different base curves for different indices
+      if (index <= 1.53) {
+        // 1.50 index: Traditional spherical design (curved front)
+        baseCurve = SE / 2 + 6.00  // Vogel's Rule
+      } else {
+        // High-index (1.60+): Aspheric design (flatter front)
+        baseCurve = 4.00  // Fixed flat base curve
+      }
     } else if (prescription > 0) {
-      // Hyperopic: BC = SE + 6.00
-      baseCurve = SE + 6.00
+      // Plus lenses: different strategies by index
+      if (index <= 1.53) {
+        // 1.50 index: Traditional spherical (slightly curved back)
+        baseCurve = SE + 3.00  // Reduced from 6.00 for gentler back curve
+      } else {
+        // High-index (1.60+): Aspheric design (flat back)
+        baseCurve = visualPrescription + 0.50  // Makes back surface nearly flat
+      }
     } else {
       // Plano
       baseCurve = 6.00
@@ -48,7 +63,7 @@ function AccurateLensGeometry({ centerThickness, edgeThickness, diameter, prescr
     const F1 = baseCurve // Front surface power (typically positive)
     
     // Step 3: Back Surface Power
-    const F2 = prescription - F1 // Back surface power
+    const F2 = visualPrescription - F1 // Back surface power (using visual prescription)
     
     // Step 4: Convert Powers to Radii
     const r1 = Math.abs((1000 * (index - 1)) / F1) // Front radius
@@ -103,8 +118,8 @@ function AccurateLensGeometry({ centerThickness, edgeThickness, diameter, prescr
         
         // Step 6: Calculate Y positions for vertices
         // Both surfaces curve in the SAME direction (both downward)
-        const topY = -s1 // Front surface
-        const bottomY = -centerThickness - s2 // Back surface
+        const topY = -s1  // Front surface actual
+        const bottomY = -centerThickness - s2  // Back surface uses visual prescription
         
         // The thickness at this point naturally emerges from geometry
         // thickness = topY - bottomY = -s1 - (-centerThickness - s2) = centerThickness + s2 - s1

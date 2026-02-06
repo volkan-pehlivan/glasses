@@ -7,6 +7,9 @@ import './GLBLensViewer.css'
 // Lens Geometry Component
 function AccurateLensGeometry({ centerThickness, edgeThickness, diameter, prescription, index }) {
   const geometry = useMemo(() => {
+    // Simple: just show half the prescription for visual appeal
+    const visualPrescription = prescription * 0.5;
+    
     const width = diameter * 1.4
     const height = diameter * 0.9
     
@@ -24,19 +27,34 @@ function AccurateLensGeometry({ centerThickness, edgeThickness, diameter, prescr
     const positions = []
     const indices = []
     
-    const SE = prescription
+    const SE = visualPrescription
     
     let baseCurve
     if (prescription < 0) {
-      baseCurve = SE / 2 + 6.00
+      // Minus lenses: different base curves for different indices
+      if (index <= 1.53) {
+        // 1.50 index: Traditional spherical design (curved front)
+        baseCurve = SE / 2 + 6.00  // Vogel's Rule
+      } else {
+        // High-index (1.60+): Aspheric design (flatter front)
+        baseCurve = 4.00  // Fixed flat base curve for modern look
+      }
     } else if (prescription > 0) {
-      baseCurve = SE + 6.00
+      // Plus lenses: different strategies by index
+      if (index <= 1.53) {
+        // 1.50 index: Traditional spherical (slightly curved back)
+        baseCurve = SE + 3.00  // Reduced from 6.00 for gentler back curve
+      } else {
+        // High-index (1.60+): Aspheric design (flat back)
+        baseCurve = visualPrescription + 0.50  // Makes back surface nearly flat
+      }
     } else {
+      // Plano
       baseCurve = 6.00
     }
     
     const F1 = baseCurve
-    const F2 = prescription - F1
+    const F2 = visualPrescription - F1  // Use visual prescription for back surface
     const r1 = Math.abs((1000 * (index - 1)) / F1)
     const r2 = Math.abs((1000 * (index - 1)) / F2)
     
@@ -129,8 +147,8 @@ function AccurateLensGeometry({ centerThickness, edgeThickness, diameter, prescr
     }
     
     const centerR = 0
-    const centerS1 = calculateSagitta(centerR, r1)
-    const centerS2 = calculateSagitta(centerR, r2)
+    const centerS1 = calculateSagitta(centerR, r1)  // Front surface actual
+    const centerS2 = calculateSagitta(centerR, r2)  // Back surface uses visual prescription
     positions.push(0, -centerS1, 0)
     positions.push(0, -centerThickness - centerS2, 0)
     
@@ -143,8 +161,8 @@ function AccurateLensGeometry({ centerThickness, edgeThickness, diameter, prescr
         const x = boundaryPt.x * ringRatio
         const z = boundaryPt.z * ringRatio
         const r = Math.sqrt(x * x + z * z)
-        const s1 = calculateSagitta(r, r1)
-        const s2 = calculateSagitta(r, r2)
+        const s1 = calculateSagitta(r, r1)  // Front surface actual
+        const s2 = calculateSagitta(r, r2)  // Back surface uses visual prescription
         const topY = -s1
         const bottomY = -centerThickness - s2
         
