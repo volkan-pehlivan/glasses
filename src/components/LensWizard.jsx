@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useContext } from 'react'
 import { WizardControlsContext } from '../App'
-import ShapeStep from './wizard/ShapeStep'
+// import ShapeStep from './wizard/ShapeStep' // Removed - keep for future use
 import PreviewStep from './wizard/PreviewStep'
-import SummaryStep from './wizard/SummaryStep'
+// import SummaryStep from './wizard/SummaryStep' // Removed - keep for future use
 import ProgressIndicator from './wizard/ProgressIndicator'
 import './LensWizard.css'
 
@@ -23,9 +23,9 @@ function LensWizard() {
     hasAstigmatism: false,
     
     // Frame - separate for each eye
-    rightDiameter: 70,
+    rightDiameter: 65,
     rightFrameSize: 'medium-large',
-    leftDiameter: 70,
+    leftDiameter: 65,
     leftFrameSize: 'medium-large',
     bridgeWidth: 17, // Distance between lenses (DBL)
     
@@ -65,9 +65,9 @@ function LensWizard() {
   })
 
   const steps = [
-    { id: 1, label: 'Şekil', icon: '⭕' },
-    { id: 2, label: 'Önizleme', icon: '👁️' },
-    { id: 3, label: 'Sonuç', icon: '✅' }
+    { id: 1, label: 'Önizleme', icon: '👁️' }
+    // Removed for now - keep for future use:
+    // { id: 2, label: 'Sonuç', icon: '✅' }
   ]
 
   const updateData = (newData) => {
@@ -98,9 +98,9 @@ function LensWizard() {
       leftCylinder: 0,
       leftAxis: 0,
       hasAstigmatism: false,
-      rightDiameter: 70,
+      rightDiameter: 65,
       rightFrameSize: 'medium-large',
-      leftDiameter: 70,
+      leftDiameter: 65,
       leftFrameSize: 'medium-large',
       rightIndex: 1.60,
       leftIndex: 1.60,
@@ -154,18 +154,18 @@ function LensWizard() {
 
     switch (currentStep) {
       case 1:
-        return <ShapeStep {...stepProps} />
-      case 2:
         return <PreviewStep {...stepProps} />
-      case 3:
-        return <SummaryStep {...stepProps} />
+      // Removed for now - keep for future use:
+      // case 2:
+      //   return <SummaryStep {...stepProps} />
       default:
-        return <ShapeStep {...stepProps} />
+        return <PreviewStep {...stepProps} />
     }
   }
 
   return (
     <div className="lens-wizard">
+      {/* Navigation removed - only one step now
       <div className="wizard-header">
         <button 
           className="nav-btn"
@@ -192,6 +192,7 @@ function LensWizard() {
           {currentStep === steps.length ? '🔄 Yeni' : 'İleri →'}
         </button>
       </div>
+      */}
 
       <div className="wizard-content">
         {renderStep()}

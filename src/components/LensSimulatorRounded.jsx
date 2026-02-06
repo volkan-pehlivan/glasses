@@ -409,26 +409,47 @@ function LensModel({ params, controlsRef, showDebugLines }) {
   
   const lensShape = params.lensShape || 'classic'
   
+  // Shape configurations - needed for accurate bridge width calculation
+  const shapeConfigs = {
+    classic: { topWidth: 1.4, bottomWidth: 1.4 },
+    rectangle: { topWidth: 1.4, bottomWidth: 1.4 },
+    circle: { topWidth: 1.0, bottomWidth: 1.0 },
+    oval: { topWidth: 1.4, bottomWidth: 1.4 },
+    aviator: { topWidth: 1.3, bottomWidth: 1.5 },
+    wayfarer: { topWidth: 1.5, bottomWidth: 1.3 }
+  }
+  
+  const shapeConfig = shapeConfigs[lensShape] || shapeConfigs.classic
+  
   // Calculate lens spacing based on bridge width
   const bridgeWidth = params.bridgeWidth || 17
   const rightDiameter = showBoth ? params.rightDiameter : params.diameter
   const leftDiameter = showBoth ? params.leftDiameter : params.diameter
   
-  // Lens bounding box width is diameter * 1.4 (as defined in geometry)
-  const rightLensWidth = rightDiameter * 1.4
-  const leftLensWidth = leftDiameter * 1.4
+  // Calculate actual lens width at center (bridge level) for each shape
+  // For trapezoid shapes, use average of top and bottom width
+  const rightCenterWidthMultiplier = (shapeConfig.topWidth + shapeConfig.bottomWidth) / 2
+  const leftCenterWidthMultiplier = (shapeConfig.topWidth + shapeConfig.bottomWidth) / 2
   
-  // Position lenses so the gap between bounding boxes equals bridgeWidth
+  const rightLensWidth = rightDiameter * rightCenterWidthMultiplier
+  const leftLensWidth = leftDiameter * leftCenterWidthMultiplier
+  
+  // IMPORTANT: Scale bridge width by the same multiplier as lens width for visual consistency
+  // The lens geometry is scaled by the width multiplier, so bridge must match
+  const averageWidthMultiplier = (rightCenterWidthMultiplier + leftCenterWidthMultiplier) / 2
+  const visualBridgeWidth = bridgeWidth * averageWidthMultiplier
+  
+  // Position lenses so the gap between bounding boxes equals visualBridgeWidth
   // rightLensX + rightLensWidth/2 = right inner edge
   // leftLensX - leftLensWidth/2 = left inner edge
-  // We want: (leftLensX - leftLensWidth/2) - (rightLensX + rightLensWidth/2) = bridgeWidth
+  // We want: (leftLensX - leftLensWidth/2) - (rightLensX + rightLensWidth/2) = visualBridgeWidth
   // Since lenses are symmetric: rightLensX = -leftLensX
-  // So: (-rightLensX - leftLensWidth/2) - (rightLensX + rightLensWidth/2) = bridgeWidth
-  // Simplifying: -2*rightLensX - (leftLensWidth + rightLensWidth)/2 = bridgeWidth
-  // rightLensX = -((leftLensWidth + rightLensWidth)/2 + bridgeWidth) / 2
+  // So: (-rightLensX - leftLensWidth/2) - (rightLensX + rightLensWidth/2) = visualBridgeWidth
+  // Simplifying: -2*rightLensX - (leftLensWidth + rightLensWidth)/2 = visualBridgeWidth
+  // rightLensX = -((leftLensWidth + rightLensWidth)/2 + visualBridgeWidth) / 2
   
-  const rightLensX = -((rightLensWidth + leftLensWidth) / 2 + bridgeWidth) / 2
-  const leftLensX = ((rightLensWidth + leftLensWidth) / 2 + bridgeWidth) / 2
+  const rightLensX = -((rightLensWidth + leftLensWidth) / 2 + visualBridgeWidth) / 2
+  const leftLensX = ((rightLensWidth + leftLensWidth) / 2 + visualBridgeWidth) / 2
   
   return (
     <group ref={groupRef}>
@@ -501,7 +522,7 @@ function LensModel({ params, controlsRef, showDebugLines }) {
           {/* Bridge indicator - shows the actual gap between lenses */}
           {showDebugLines && (
             <mesh position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
-              <boxGeometry args={[bridgeWidth, rightDiameter * 0.9, 2]} />
+              <boxGeometry args={[visualBridgeWidth, rightDiameter * 0.9, 2]} />
               <meshBasicMaterial color="#ff6b6b" transparent opacity={0.2} side={THREE.DoubleSide} />
             </mesh>
           )}
@@ -863,8 +884,8 @@ function LensSimulatorRounded({
             <div className="slider-wrapper">
               <input
                 type="range"
-                min="-10"
-                max="10"
+                min="-8"
+                max="4"
                 step="0.25"
                 value={activeEye === 'both' 
                   ? (prescriptionEye === 'right' ? rightPrescription : leftPrescription)
@@ -874,7 +895,7 @@ function LensSimulatorRounded({
                 className="prescription-slider"
               />
               <div className="slider-ticks">
-                {[-10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(val => (
+                {[-8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4].map(val => (
                   <span key={val} className="tick">
                     {val > 0 ? `+${val}` : val}
                   </span>
@@ -886,7 +907,7 @@ function LensSimulatorRounded({
                 const value = activeEye === 'both' 
                   ? (prescriptionEye === 'right' ? rightPrescription : leftPrescription)
                   : (activeEye === 'right' ? rightPrescription : leftPrescription);
-                return `${value > 0 ? '+' : ''}${value.toFixed(1)} D`;
+                return `${value > 0 ? '+' : ''}${value.toFixed(2)} D`;
               })()}
             </span>
           </div>

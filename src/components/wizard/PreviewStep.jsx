@@ -7,7 +7,7 @@ function PreviewStep({ data, onUpdate }) {
   const [useRounded, setUseRounded] = useState(true) // Always use rounded
   const [activeEye, setActiveEye] = useState('both') // 'right', 'left', or 'both' - controls VIEW
   const [prescriptionEye, setPrescriptionEye] = useState('right') // Which eye's data to EDIT when both view is active
-  const [openAccordion, setOpenAccordion] = useState(null) // 'colors', 'materials', 'measurements', or null (all closed by default)
+  const [openAccordion, setOpenAccordion] = useState(null) // 'shape', 'colors', 'materials', 'measurements', or null (all closed by default)
   
   // Calculate thickness for a specific eye
   const calculateThickness = (prescription, index, diameter) => {
@@ -142,6 +142,41 @@ function PreviewStep({ data, onUpdate }) {
 
           {/* Measurements panel - Right side */}
           <div className="measurements-panel-combined">
+            {/* Lens Shape Accordion */}
+            <div className="appearance-accordion">
+              <button 
+                className={`accordion-header ${openAccordion === 'shape' ? 'open' : ''}`}
+                onClick={() => setOpenAccordion(openAccordion === 'shape' ? null : 'shape')}
+              >
+                <span>⭕ Cam Şekli</span>
+                <span className="accordion-icon">{openAccordion === 'shape' ? '▼' : '▶'}</span>
+              </button>
+              
+              {openAccordion === 'shape' && (
+                <div className="accordion-content">
+                  <div className="shape-selector-grid">
+                    {[
+                      { id: 'classic', name: 'Klasik', desc: 'Üstte köşeli, altta yuvarlak' },
+                      { id: 'rectangle', name: 'Dikdörtgen', desc: 'Tüm köşeler yuvarlatılmış' },
+                      { id: 'circle', name: 'Yuvarlak', desc: 'Mükemmel daire' },
+                      { id: 'oval', name: 'Oval', desc: 'Yatay elips' },
+                      { id: 'wayfarer', name: 'Wayfarer', desc: 'Üstte geniş, altta dar' }
+                    ].map((shape) => (
+                      <div
+                        key={shape.id}
+                        className={`shape-option ${data.lensShape === shape.id ? 'selected' : ''}`}
+                        onClick={() => onUpdate({ lensShape: shape.id })}
+                      >
+                        <div className="shape-name">{shape.name}</div>
+                        <div className="shape-desc">{shape.desc}</div>
+                        {data.lensShape === shape.id && <div className="shape-check">✓</div>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Colors & Environment Accordion */}
             <div className="appearance-accordion">
               <button 

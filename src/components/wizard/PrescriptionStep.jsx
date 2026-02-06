@@ -48,8 +48,8 @@ function PrescriptionStep({ data, onUpdate }) {
                   <input
                     type="number"
                     step="0.25"
-                    min="-15"
-                    max="15"
+                    min="-8"
+                    max="4"
                     value={data.rightPrescription}
                     onChange={(e) => handleChange('right', 'prescription', e.target.value)}
                     className="prescription-input"
@@ -94,8 +94,8 @@ function PrescriptionStep({ data, onUpdate }) {
                   <input
                     type="number"
                     step="0.25"
-                    min="-15"
-                    max="15"
+                    min="-8"
+                    max="4"
                     value={data.leftPrescription}
                     onChange={(e) => handleChange('left', 'prescription', e.target.value)}
                     className="prescription-input"
