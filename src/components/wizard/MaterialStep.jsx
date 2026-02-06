@@ -7,14 +7,34 @@ function MaterialStep({ data, onUpdate }) {
     const D = diameter
     const P = Math.abs(prescription || 0)
     const n = index
-    const addition = (D * D * P) / (2000 * (n - 1))
+    
+    // HOYA formula with prescription-dependent divisor
+    let divisor;
+    if (n <= 1.53) {
+      divisor = 5700;
+      if (P >= 8) divisor += 900;
+    } else if (n <= 1.63) {
+      divisor = 8000;
+      if (P >= 6) divisor -= 300;
+    } else if (n <= 1.70) {
+      divisor = 8200;
+      if (P >= 6) divisor -= 300;
+    } else {
+      divisor = 8300;
+      if (P >= 6) divisor -= 300;
+    }
+    
+    // HOYA uses index-dependent minimum center thickness
+    const minCenterThickness = (n <= 1.53) ? 2.0 : 1.0;
+    
+    const addition = (D * D * P) / (divisor * (n - 1))
     
     if (prescription < 0) {
-      return 1.5 + addition
+      return minCenterThickness + addition
     } else if (prescription > 0) {
-      return 1.5 + addition
+      return minCenterThickness + addition
     }
-    return 1.5
+    return minCenterThickness
   }
 
   const materials = [
@@ -77,7 +97,7 @@ function MaterialStep({ data, onUpdate }) {
                   {/* Thickness */}
                   <div className="thickness-display">
                     <span className="thickness-value">
-                      {material.rightThickness.toFixed(2)} mm
+                      {material.rightThickness.toFixed(1)} mm
                     </span>
                   </div>
 
@@ -120,7 +140,7 @@ function MaterialStep({ data, onUpdate }) {
                   {/* Thickness */}
                   <div className="thickness-display">
                     <span className="thickness-value">
-                      {material.leftThickness.toFixed(2)} mm
+                      {material.leftThickness.toFixed(1)} mm
                     </span>
                   </div>
 

@@ -9,25 +9,51 @@ function SummaryStep({ data, onRestart }) {
     const D = diameter
     const P = Math.abs(prescription)
     const n = index
-    const addition = (D * D * P) / (2000 * (n - 1))
+    
+    // HOYA formula with index AND prescription-dependent divisor
+    // (reverse-engineered from complete HOYA dataset)
+    let divisor;
+    
+    if (n <= 1.53) {
+      // 1.50 index
+      divisor = 5700;
+      if (P >= 8) divisor += 900; // Adjust for very high prescriptions
+    } else if (n <= 1.63) {
+      // 1.60 index
+      divisor = 8000;
+      if (P >= 6) divisor -= 300; // Adjust for high prescriptions
+    } else if (n <= 1.70) {
+      // 1.67 index
+      divisor = 8200;
+      if (P >= 6) divisor -= 300;
+    } else {
+      // 1.74+ index
+      divisor = 8300;
+      if (P >= 6) divisor -= 300;
+    }
+    
+    // HOYA uses index-dependent minimum center thickness
+    const minCenterThickness = (n <= 1.53) ? 2.0 : 1.0;
+    
+    const addition = (D * D * P) / (divisor * (n - 1))
     
     if (prescription < 0) {
       return {
-        center: data.edgeThickness,
-        edge: data.edgeThickness + addition,
-        max: data.edgeThickness + addition
+        center: minCenterThickness,
+        edge: minCenterThickness + addition,
+        max: minCenterThickness + addition
       }
     } else if (prescription > 0) {
       return {
-        center: data.edgeThickness + addition,
-        edge: data.edgeThickness,
-        max: data.edgeThickness + addition
+        center: minCenterThickness + addition,
+        edge: minCenterThickness,
+        max: minCenterThickness + addition
       }
     }
     return {
-      center: data.edgeThickness,
-      edge: data.edgeThickness,
-      max: data.edgeThickness
+      center: minCenterThickness,
+      edge: minCenterThickness,
+      max: minCenterThickness
     }
   }
 
@@ -157,12 +183,12 @@ function SummaryStep({ data, onRestart }) {
             <h3>Sağ Göz Kalınlık</h3>
             <div className="card-content">
               <div className="thickness-main">
-                <span className="thickness-value">{rightThickness.max.toFixed(2)}</span>
+                <span className="thickness-value">{rightThickness.max.toFixed(1)}</span>
                 <span className="thickness-unit">mm</span>
               </div>
               <div className="thickness-details">
-                <div>Merkez: {rightThickness.center.toFixed(2)}mm</div>
-                <div>Kenar: {rightThickness.edge.toFixed(2)}mm</div>
+                <div>Merkez: {rightThickness.center.toFixed(1)}mm</div>
+                <div>Kenar: {rightThickness.edge.toFixed(1)}mm</div>
               </div>
             </div>
           </div>
@@ -173,12 +199,12 @@ function SummaryStep({ data, onRestart }) {
             <h3>Sol Göz Kalınlık</h3>
             <div className="card-content">
               <div className="thickness-main">
-                <span className="thickness-value">{leftThickness.max.toFixed(2)}</span>
+                <span className="thickness-value">{leftThickness.max.toFixed(1)}</span>
                 <span className="thickness-unit">mm</span>
               </div>
               <div className="thickness-details">
-                <div>Merkez: {leftThickness.center.toFixed(2)}mm</div>
-                <div>Kenar: {leftThickness.edge.toFixed(2)}mm</div>
+                <div>Merkez: {leftThickness.center.toFixed(1)}mm</div>
+                <div>Kenar: {leftThickness.edge.toFixed(1)}mm</div>
               </div>
             </div>
           </div>

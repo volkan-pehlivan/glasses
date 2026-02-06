@@ -202,28 +202,46 @@ function LensSimulatorTest({ params }) {
     const P = Math.abs(prescription)
     const n = index
     
-    // Industry standard formula: (D² × |P|) / (2000 × (n-1))
-    const thicknessAddition = (D * D * P) / (2000 * (n - 1))
+    // HOYA formula with prescription-dependent divisor
+    let divisor;
+    if (n <= 1.53) {
+      divisor = 5700;
+      if (P >= 8) divisor += 900;
+    } else if (n <= 1.63) {
+      divisor = 8000;
+      if (P >= 6) divisor -= 300;
+    } else if (n <= 1.70) {
+      divisor = 8200;
+      if (P >= 6) divisor -= 300;
+    } else {
+      divisor = 8300;
+      if (P >= 6) divisor -= 300;
+    }
+    
+    // HOYA uses index-dependent minimum center thickness
+    const minCenterThickness = (n <= 1.53) ? 2.0 : 1.0;
+    
+    const thicknessAddition = (D * D * P) / (divisor * (n - 1))
     
     let centerT, edgeT
     
     if (prescription < 0) {
       // Myopic - thin center, thick edge
-      centerT = edgeThickness
-      edgeT = edgeThickness + thicknessAddition
+      centerT = minCenterThickness
+      edgeT = minCenterThickness + thicknessAddition
     } else if (prescription > 0) {
       // Hyperopic - thick center, thin edge
-      centerT = edgeThickness + thicknessAddition
-      edgeT = edgeThickness
+      centerT = minCenterThickness + thicknessAddition
+      edgeT = minCenterThickness
     } else {
       // Plano
-      centerT = edgeThickness
-      edgeT = edgeThickness
+      centerT = minCenterThickness
+      edgeT = minCenterThickness
     }
     
     return {
-      center: Math.max(edgeThickness, centerT),
-      edge: Math.max(edgeThickness, edgeT)
+      center: centerT,
+      edge: edgeT
     }
   }
   
@@ -279,11 +297,11 @@ function LensSimulatorTest({ params }) {
         <div className="measurements-overlay">
           <div className="measurement-row">
             <span className="measurement-label" style={{ color: '#ff4444' }}>●</span>
-            <span className="measurement-text">Merkez: {thickness.center.toFixed(2)} mm</span>
+            <span className="measurement-text">Merkez: {thickness.center.toFixed(1)} mm</span>
           </div>
           <div className="measurement-row">
             <span className="measurement-label" style={{ color: '#ff8800' }}>●</span>
-            <span className="measurement-text">Kenar: {thickness.edge.toFixed(2)} mm</span>
+            <span className="measurement-text">Kenar: {thickness.edge.toFixed(1)} mm</span>
           </div>
           <div className="measurement-row">
             <span className="measurement-label" style={{ color: '#4444ff' }}>●</span>

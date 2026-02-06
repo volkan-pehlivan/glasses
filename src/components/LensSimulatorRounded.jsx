@@ -23,6 +23,12 @@ function AccurateLensGeometry({
   ior = 1.5
 }) {
   const geometry = useMemo(() => {
+    // Scale thickness for realistic visual representation
+    // The thickness values are correct, but need to be scaled down for 3D rendering
+    // to match the visual proportions seen in professional lens diagrams
+    const VISUAL_THICKNESS_SCALE = 1.0 / 1.4; // Compensate for diameter scaling
+    const scaledCenterThickness = centerThickness * VISUAL_THICKNESS_SCALE;
+    
     // Shape configurations with trapezoid support
     const shapeConfigs = {
       classic: {
@@ -237,7 +243,7 @@ function AccurateLensGeometry({
         const s1 = calculateSagitta(r, r1)
         const s2 = calculateSagitta(r, r2)
         const topY = -s1
-        const bottomY = -centerThickness - s2
+        const bottomY = -scaledCenterThickness - s2
         
         positions.push(x, topY, z)
         positions.push(x, bottomY, z)
@@ -338,24 +344,44 @@ function LensModel({ params, controlsRef, showDebugLines }) {
     const D = diameter
     const P = Math.abs(prescription)
     const n = index
-    const thicknessAddition = (D * D * P) / (2000 * (n - 1))
+    
+    // HOYA formula with prescription-dependent divisor
+    let divisor;
+    if (n <= 1.53) {
+      divisor = 5700;
+      if (P >= 8) divisor += 900;
+    } else if (n <= 1.63) {
+      divisor = 8000;
+      if (P >= 6) divisor -= 300;
+    } else if (n <= 1.70) {
+      divisor = 8200;
+      if (P >= 6) divisor -= 300;
+    } else {
+      divisor = 8300;
+      if (P >= 6) divisor -= 300;
+    }
+    
+    // HOYA uses index-dependent minimum center thickness
+    const minCenterThickness = (n <= 1.53) ? 2.0 : 1.0;
+    
+    const thicknessAddition = (D * D * P) / (divisor * (n - 1))
     
     let centerT, edgeT
     
     if (prescription < 0) {
-      centerT = params.edgeThickness || 1.5
+      centerT = minCenterThickness
       edgeT = centerT + thicknessAddition
     } else if (prescription > 0) {
-      centerT = (params.edgeThickness || 1.5) + thicknessAddition
-      edgeT = params.edgeThickness || 1.5
+      centerT = minCenterThickness + thicknessAddition
+      edgeT = minCenterThickness
     } else {
-      centerT = params.edgeThickness || 1.5
-      edgeT = params.edgeThickness || 1.5
+      centerT = minCenterThickness
+      edgeT = minCenterThickness
     }
     
     return {
-      center: Math.max(params.edgeThickness || 1.5, centerT),
-      edge: Math.max(params.edgeThickness || 1.5, edgeT)
+      center: centerT,
+      edge: edgeT
     }
   }
   
@@ -847,7 +873,7 @@ function LensSimulatorRounded({
                 const value = activeEye === 'both' 
                   ? (prescriptionEye === 'right' ? rightPrescription : leftPrescription)
                   : (activeEye === 'right' ? rightPrescription : leftPrescription);
-                return `${value > 0 ? '+' : ''}${value.toFixed(2)} D`;
+                return `${value > 0 ? '+' : ''}${value.toFixed(1)} D`;
               })()}
             </span>
           </div>

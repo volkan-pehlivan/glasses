@@ -263,24 +263,44 @@ function CustomLensModel({ lensParams, controlsRef, cameraView = 'side' }) {
     const D = diameter
     const P = Math.abs(prescription)
     const n = index
-    const thicknessAddition = (D * D * P) / (2000 * (n - 1))
+    
+    // HOYA formula with prescription-dependent divisor
+    let divisor;
+    if (n <= 1.53) {
+      divisor = 5700;
+      if (P >= 8) divisor += 900;
+    } else if (n <= 1.63) {
+      divisor = 8000;
+      if (P >= 6) divisor -= 300;
+    } else if (n <= 1.70) {
+      divisor = 8200;
+      if (P >= 6) divisor -= 300;
+    } else {
+      divisor = 8300;
+      if (P >= 6) divisor -= 300;
+    }
+    
+    // HOYA uses index-dependent minimum center thickness
+    const minCenterThickness = (n <= 1.53) ? 2.0 : 1.0;
+    
+    const thicknessAddition = (D * D * P) / (divisor * (n - 1))
     
     let centerT, edgeT
     
     if (prescription < 0) {
-      centerT = lensParams.edgeThickness || 1.5
+      centerT = minCenterThickness
       edgeT = centerT + thicknessAddition
     } else if (prescription > 0) {
-      centerT = (lensParams.edgeThickness || 1.5) + thicknessAddition
-      edgeT = lensParams.edgeThickness || 1.5
+      centerT = minCenterThickness + thicknessAddition
+      edgeT = minCenterThickness
     } else {
-      centerT = lensParams.edgeThickness || 1.5
-      edgeT = lensParams.edgeThickness || 1.5
+      centerT = minCenterThickness
+      edgeT = minCenterThickness
     }
     
     return {
-      center: Math.max(lensParams.edgeThickness || 1.5, centerT),
-      edge: Math.max(lensParams.edgeThickness || 1.5, edgeT)
+      center: centerT,
+      edge: edgeT
     }
   }
   

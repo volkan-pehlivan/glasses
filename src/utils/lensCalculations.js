@@ -28,9 +28,29 @@ export function calculateLensThicknessApprox(params) {
   const P = Math.abs(prescription)  // Dioptri (mutlak değer)
   const n = index
   
-  // Endüstri standardı yaklaşık formül
-  // Thickness Addition = D² × |P| / (2000 × (n-1))
-  const thicknessAddition = (D * D * P) / (2000 * (n - 1))
+  // HOYA formula with index AND prescription-dependent divisor
+  // (reverse-engineered from complete HOYA dataset)
+  let divisor;
+  
+  if (n <= 1.53) {
+    // 1.50 index
+    divisor = 5700;
+    if (P >= 8) divisor += 900; // Adjust for very high prescriptions
+  } else if (n <= 1.63) {
+    // 1.60 index
+    divisor = 8000;
+    if (P >= 6) divisor -= 300; // Adjust for high prescriptions
+  } else if (n <= 1.70) {
+    // 1.67 index
+    divisor = 8200;
+    if (P >= 6) divisor -= 300;
+  } else {
+    // 1.74+ index
+    divisor = 8300;
+    if (P >= 6) divisor -= 300;
+  }
+  
+  const thicknessAddition = (D * D * P) / (divisor * (n - 1))
   
   let centerThickness, edgeThickness_calc
   

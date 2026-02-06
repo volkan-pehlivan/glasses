@@ -9,33 +9,51 @@ function ControlPanel({ params, onUpdate }) {
     const P = Math.abs(prescription)
     const n = index
     
-    // Endüstri standardı formül: (D² × |P|) / (2000 × (n-1))
-    const thicknessAddition = (D * D * P) / (2000 * (n - 1))
+    // HOYA formula with prescription-dependent divisor
+    let divisor;
+    if (n <= 1.53) {
+      divisor = 5700;
+      if (P >= 8) divisor += 900;
+    } else if (n <= 1.63) {
+      divisor = 8000;
+      if (P >= 6) divisor -= 300;
+    } else if (n <= 1.70) {
+      divisor = 8200;
+      if (P >= 6) divisor -= 300;
+    } else {
+      divisor = 8300;
+      if (P >= 6) divisor -= 300;
+    }
+    
+    // HOYA uses index-dependent minimum center thickness
+    const minCenterThickness = (n <= 1.53) ? 2.0 : 1.0;
+    
+    const thicknessAddition = (D * D * P) / (divisor * (n - 1))
     
     let centerT, edgeT, maxEdgeT
     
     if (prescription < 0) {
       // Miyop - kenarlar kalın
-      centerT = edgeThickness
+      centerT = minCenterThickness
       edgeT = centerT + thicknessAddition
       maxEdgeT = edgeT
     } else if (prescription > 0) {
       // Hipermetrop - merkez kalın
-      edgeT = edgeThickness
+      edgeT = minCenterThickness
       centerT = edgeT + thicknessAddition
       maxEdgeT = centerT
     } else {
       // Plano
-      centerT = edgeThickness
-      edgeT = edgeThickness
-      maxEdgeT = edgeThickness
+      centerT = minCenterThickness
+      edgeT = minCenterThickness
+      maxEdgeT = minCenterThickness
     }
     
     return {
-      center: Math.max(edgeThickness, centerT),
-      edge: Math.max(edgeThickness, edgeT),
-      maxEdge: Math.max(edgeThickness, maxEdgeT),
-      min: edgeThickness
+      center: centerT,
+      edge: edgeT,
+      maxEdge: maxEdgeT,
+      min: minCenterThickness
     }
   }
 
@@ -138,15 +156,15 @@ function ControlPanel({ params, onUpdate }) {
         <div className="thickness-display">
           <div className="thickness-item">
             <span className="label">Merkez Kalınlık:</span>
-            <span className="value">{thickness.center.toFixed(2)} mm</span>
+            <span className="value">{thickness.center.toFixed(1)} mm</span>
           </div>
           <div className="thickness-item">
             <span className="label">Maks. {params.prescription < 0 ? 'Kenar' : 'Merkez'} Kalınlık:</span>
-            <span className="value">{(params.prescription < 0 ? thickness.maxEdge : thickness.center).toFixed(2)} mm</span>
+            <span className="value">{(params.prescription < 0 ? thickness.maxEdge : thickness.center).toFixed(1)} mm</span>
           </div>
           <div className="thickness-item">
             <span className="label">Min. Kenar Kalınlık:</span>
-            <span className="value">{thickness.min.toFixed(2)} mm</span>
+            <span className="value">{thickness.min.toFixed(1)} mm</span>
           </div>
         </div>
       </div>

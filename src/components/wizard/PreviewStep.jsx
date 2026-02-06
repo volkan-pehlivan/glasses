@@ -14,22 +14,42 @@ function PreviewStep({ data, onUpdate }) {
     const D = diameter
     const P = Math.abs(prescription)
     const n = index
-    const addition = (D * D * P) / (2000 * (n - 1))
+    
+    // HOYA formula with prescription-dependent divisor
+    let divisor;
+    if (n <= 1.53) {
+      divisor = 5700;
+      if (P >= 8) divisor += 900;
+    } else if (n <= 1.63) {
+      divisor = 8000;
+      if (P >= 6) divisor -= 300;
+    } else if (n <= 1.70) {
+      divisor = 8200;
+      if (P >= 6) divisor -= 300;
+    } else {
+      divisor = 8300;
+      if (P >= 6) divisor -= 300;
+    }
+    
+    // HOYA uses index-dependent minimum center thickness
+    const minCenterThickness = (n <= 1.53) ? 2.0 : 1.0;
+    
+    const addition = (D * D * P) / (divisor * (n - 1))
     
     if (prescription < 0) {
       return {
-        center: data.edgeThickness,
-        edge: data.edgeThickness + addition
+        center: minCenterThickness,
+        edge: minCenterThickness + addition
       }
     } else if (prescription > 0) {
       return {
-        center: data.edgeThickness + addition,
-        edge: data.edgeThickness
+        center: minCenterThickness + addition,
+        edge: minCenterThickness
       }
     }
     return {
-      center: data.edgeThickness,
-      edge: data.edgeThickness
+      center: minCenterThickness,
+      edge: minCenterThickness
     }
   }
 
@@ -435,7 +455,7 @@ function PreviewStep({ data, onUpdate }) {
                   <h4>👁️ Sağ Göz (OD)</h4>
                   <div className="measurement-item">
                     <span className="label">Reçete:</span>
-                    <span className="value">{data.rightPrescription > 0 ? '+' : ''}{data.rightPrescription.toFixed(2)} D</span>
+                    <span className="value">{data.rightPrescription > 0 ? '+' : ''}{data.rightPrescription.toFixed(1)} D</span>
                   </div>
                   <div className="measurement-item">
                     <span className="label">Çap:</span>
@@ -443,15 +463,15 @@ function PreviewStep({ data, onUpdate }) {
                   </div>
                   <div className="measurement-item">
                     <span className="label">Merkez:</span>
-                    <span className="value">{rightThickness.center.toFixed(2)} mm</span>
+                    <span className="value">{rightThickness.center.toFixed(1)} mm</span>
                   </div>
                   <div className="measurement-item">
                     <span className="label">Kenar:</span>
-                    <span className="value">{rightThickness.edge.toFixed(2)} mm</span>
+                    <span className="value">{rightThickness.edge.toFixed(1)} mm</span>
                   </div>
                   <div className="measurement-item highlight">
                     <span className="label">Maksimum:</span>
-                    <span className="value">{Math.max(rightThickness.center, rightThickness.edge).toFixed(2)} mm</span>
+                    <span className="value">{Math.max(rightThickness.center, rightThickness.edge).toFixed(1)} mm</span>
                   </div>
                 </div>
               )}
@@ -461,7 +481,7 @@ function PreviewStep({ data, onUpdate }) {
                   <h4>👁️ Sol Göz (OS)</h4>
                   <div className="measurement-item">
                     <span className="label">Reçete:</span>
-                    <span className="value">{data.leftPrescription > 0 ? '+' : ''}{data.leftPrescription.toFixed(2)} D</span>
+                    <span className="value">{data.leftPrescription > 0 ? '+' : ''}{data.leftPrescription.toFixed(1)} D</span>
                   </div>
                   <div className="measurement-item">
                     <span className="label">Çap:</span>
@@ -469,15 +489,15 @@ function PreviewStep({ data, onUpdate }) {
                   </div>
                   <div className="measurement-item">
                     <span className="label">Merkez:</span>
-                    <span className="value">{leftThickness.center.toFixed(2)} mm</span>
+                    <span className="value">{leftThickness.center.toFixed(1)} mm</span>
                   </div>
                   <div className="measurement-item">
                     <span className="label">Kenar:</span>
-                    <span className="value">{leftThickness.edge.toFixed(2)} mm</span>
+                    <span className="value">{leftThickness.edge.toFixed(1)} mm</span>
                   </div>
                   <div className="measurement-item highlight">
                     <span className="label">Maksimum:</span>
-                    <span className="value">{Math.max(leftThickness.center, leftThickness.edge).toFixed(2)} mm</span>
+                    <span className="value">{Math.max(leftThickness.center, leftThickness.edge).toFixed(1)} mm</span>
                   </div>
                 </div>
               )}
