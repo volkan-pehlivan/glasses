@@ -1,11 +1,14 @@
 import React from 'react'
-import LensConfigurator from './components/LensConfigurator'
+import { useLensState } from './hooks/useLensState'
+import ControlPanel from './components/ControlPanel'
 import './App.css'
 
 function App() {
+  const { data, updateData } = useLensState()
+
   return (
     <div className="app">
-      <LensConfigurator />
+      <ControlPanel data={data} onUpdate={updateData} />
     </div>
   )
 }

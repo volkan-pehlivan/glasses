@@ -2,10 +2,13 @@
   max-width: 100%;
   margin: 0;
   position: relative;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .control-panel .panel-content {
   max-width: 100%;
+  height: 100%;
 }
 
 /* Eye selector - Vertical on left side */
@@ -140,8 +143,8 @@
   display: grid;
   grid-template-columns: 1fr 400px;
   gap: 0;
-  height: 100%;
-  flex: 1;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .canvas-wrapper-full {
@@ -269,7 +272,9 @@
   background: white;
   padding: 24px;
   overflow-y: auto;
-  height: 100%;
+  height: 100vh;
+  max-height: 100vh;
+  box-sizing: border-box;
 }
 
 /* Appearance Accordion */
