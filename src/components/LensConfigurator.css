@@ -1,0 +1,81 @@
+.lens-configurator {
+  height: 100vh;
+  background: #f5f7fa;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.configurator-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+}
+
+.control-panel {
+  background: white;
+  padding: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.panel-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+.info-box {
+  display: flex;
+  gap: 12px;
+  background: #f8fafc;
+  border-left: 3px solid #2563eb;
+  padding: 16px;
+  border-radius: 6px;
+  margin-top: 24px;
+}
+
+.info-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.info-content {
+  font-size: 14px;
+  color: #475569;
+  line-height: 1.6;
+}
+
+.info-content strong {
+  color: #1a202c;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .configurator-content {
+    padding: 20px 16px;
+  }
+
+  .control-panel {
+    padding: 24px 20px;
+  }
+}
