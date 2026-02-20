@@ -47,7 +47,7 @@ function ControlPanel({ data, onUpdate }) {
                                 leftIndex: data.leftIndex,
                                 rightDiameter: data.rightDiameter,
                                 leftDiameter: data.leftDiameter,
-                                lensShape: data.lensShape || 'classic',
+                                lensShape: data.lensShape || 'rectangle',
                                 backgroundEnvironment: data.backgroundEnvironment || 'city',
                                 backgroundColor: data.backgroundColor || 'default',
                                 customBackgroundColor: data.customBackgroundColor || '#1a1a1a',

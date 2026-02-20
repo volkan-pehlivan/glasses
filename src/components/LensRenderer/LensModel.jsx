@@ -4,7 +4,7 @@ import LensGeometry from './LensGeometry'
 import { calculateThickness } from '../../utils/lensCalculations'
 import { SHAPE_CONFIGS } from '../../utils/shapeConfigs'
 
-function LensModel({ params, controlsRef, showDebugLines }) {
+function LensModel({ params, activeEye, controlsRef, showDebugLines }) {
     const groupRef = useRef(null)
 
     const showBoth = params.showBoth
@@ -20,10 +20,10 @@ function LensModel({ params, controlsRef, showDebugLines }) {
     const rightYOffset = showBoth ? rightMaxThickness / 2 : 0
     const leftYOffset = showBoth ? leftMaxThickness / 2 : 0
 
-    const lensShape = params.lensShape || 'classic'
+    const lensShape = params.lensShape || 'rectangle'
 
     // Shape configurations - needed for accurate bridge width calculation
-    const shapeConfig = SHAPE_CONFIGS[lensShape] || SHAPE_CONFIGS.classic
+    const shapeConfig = SHAPE_CONFIGS[lensShape] || SHAPE_CONFIGS.rectangle
 
     // Calculate lens spacing based on bridge width
     const bridgeWidth = params.bridgeWidth || 17
@@ -31,17 +31,16 @@ function LensModel({ params, controlsRef, showDebugLines }) {
     const leftDiameter = showBoth ? params.leftDiameter : params.diameter
 
     // Calculate actual lens width at center (bridge level) for each shape
-    // For trapezoid shapes, use average of top and bottom width
-    const rightCenterWidthMultiplier = (shapeConfig.topWidth + shapeConfig.bottomWidth) / 2
-    const leftCenterWidthMultiplier = (shapeConfig.topWidth + shapeConfig.bottomWidth) / 2
+    // Use widthRatio from shape config (approximate width-to-diameter ratio)
+    const widthRatio = shapeConfig.widthRatio || 1.0
+    const rightCenterWidthMultiplier = widthRatio
+    const leftCenterWidthMultiplier = widthRatio
 
     const rightLensWidth = rightDiameter * rightCenterWidthMultiplier
     const leftLensWidth = leftDiameter * leftCenterWidthMultiplier
 
-    // IMPORTANT: Scale bridge width by the same multiplier as lens width for visual consistency
-    // The lens geometry is scaled by the width multiplier, so bridge must match
-    const averageWidthMultiplier = (rightCenterWidthMultiplier + leftCenterWidthMultiplier) / 2
-    const visualBridgeWidth = bridgeWidth * averageWidthMultiplier
+    // Use correct bridge width without modification for wide lenses
+    const visualBridgeWidth = bridgeWidth
 
     // Position lenses so the gap between bounding boxes equals visualBridgeWidth
     const rightLensX = -((rightLensWidth + leftLensWidth) / 2 + visualBridgeWidth) / 2
@@ -94,7 +93,7 @@ function LensModel({ params, controlsRef, showDebugLines }) {
                         />
                     </group>
 
-                    <group position={[leftLensX, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                    <group position={[leftLensX, 0, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[-1, 1, 1]}>
                         <LensGeometry
                             centerThickness={leftThickness.center}
                             edgeThickness={leftThickness.edge}
@@ -129,17 +128,6 @@ function LensModel({ params, controlsRef, showDebugLines }) {
                         const leftInnerEdge = leftLensX - leftLensWidth / 2
                         const gapLength = leftInnerEdge - rightInnerEdge
                         const gapCenter = (rightInnerEdge + leftInnerEdge) / 2
-
-                        // Log the values for debugging
-                        console.log('Bridge Width Input:', bridgeWidth)
-                        console.log('Right Lens X:', rightLensX)
-                        console.log('Left Lens X:', leftLensX)
-                        console.log('Right Lens Width:', rightLensWidth)
-                        console.log('Left Lens Width:', leftLensWidth)
-                        console.log('Right Inner Edge:', rightInnerEdge)
-                        console.log('Left Inner Edge:', leftInnerEdge)
-                        console.log('Gap Length (Blue Line):', gapLength)
-                        console.log('---')
 
                         return (
                             <mesh position={[gapCenter, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
@@ -192,7 +180,10 @@ function LensModel({ params, controlsRef, showDebugLines }) {
                     )}
                 </>
             ) : (
-                <group rotation={[Math.PI / 2, 0, 0]}>
+                <group
+                    rotation={[Math.PI / 2, 0, 0]}
+                    scale={activeEye === 'left' ? [-1, 1, 1] : [1, 1, 1]}
+                >
                     <LensGeometry
                         centerThickness={rightThickness.center}
                         edgeThickness={rightThickness.edge}

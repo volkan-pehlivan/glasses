@@ -25,7 +25,7 @@ const initialData = {
     leftIndex: 1.60,
 
     // Shape
-    lensShape: 'classic',
+    lensShape: 'realShape1',
 
     // Background
     backgroundEnvironment: 'photostudio',

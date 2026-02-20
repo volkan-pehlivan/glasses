@@ -471,7 +471,7 @@ function LensRenderer({
 
                 {showAxes && <axesHelper args={[30]} />}
 
-                <LensModel params={params} controlsRef={controlsRef} showDebugLines={showDebugLines} />
+                <LensModel params={params} activeEye={activeEye} controlsRef={controlsRef} showDebugLines={showDebugLines} />
 
                 <OrbitControls
                     ref={controlsRef}
