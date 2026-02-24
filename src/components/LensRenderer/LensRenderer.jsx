@@ -269,8 +269,8 @@ function LensRenderer({
                         <div className="slider-wrapper">
                             <input
                                 type="range"
-                                min="-8"
-                                max="4"
+                                min="-10"
+                                max="10"
                                 step="0.25"
                                 value={activeEye === 'both'
                                     ? (prescriptionEye === 'right' ? rightPrescription : leftPrescription)
@@ -280,7 +280,7 @@ function LensRenderer({
                                 className="prescription-slider"
                             />
                             <div className="slider-ticks">
-                                {[-8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4].map(val => (
+                                {[-10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(val => (
                                     <span key={val} className="tick">
                                         {val > 0 ? `+${val}` : val}
                                     </span>

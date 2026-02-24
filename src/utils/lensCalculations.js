@@ -87,17 +87,33 @@ export function calculateThickness(prescription, index, diameter) {
         }
     }
 
-    // 4. Interpolate Base Values (CT and ET from chart)
+    // 4. Interpolate/Extrapolate Base Values (CT and ET from chart)
     let baseCT, baseET
 
-    if (prescription > upper.p) {
-        // Extrapolate above max (use max point)
-        baseCT = upper.ct
-        baseET = upper.et
-    } else if (prescription < lower.p) {
-        // Extrapolate below min (use min point or formula trend)
-        baseCT = lower.ct
-        baseET = lower.et
+    if (prescription > sortedData[0].p) {
+        // Extrapolate above max point using the slope of the first segment
+        const p1 = sortedData[0]
+        const p2 = sortedData[1]
+        const dr = p1.p - p2.p
+
+        const slopeCT = (p1.ct - p2.ct) / dr
+        const slopeET = (p1.et - p2.et) / dr
+
+        const delta = prescription - p1.p
+        baseCT = p1.ct + slopeCT * delta
+        baseET = p1.et + slopeET * delta
+    } else if (prescription < sortedData[sortedData.length - 1].p) {
+        // Extrapolate below min point using the slope of the last segment
+        const p1 = sortedData[sortedData.length - 1]
+        const p2 = sortedData[sortedData.length - 2]
+        const dr = p1.p - p2.p
+
+        const slopeCT = (p1.ct - p2.ct) / dr
+        const slopeET = (p1.et - p2.et) / dr
+
+        const delta = prescription - p1.p
+        baseCT = p1.ct + slopeCT * delta
+        baseET = p1.et + slopeET * delta
     } else {
         // Interpolate between upper and lower
         const range = upper.p - lower.p
